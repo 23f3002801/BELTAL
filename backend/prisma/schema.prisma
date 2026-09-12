@@ -1,0 +1,175 @@
+// Prisma schema for BELTAL's off-chain read-cache / index.
+// The chain is the source of truth for identity/role/asset state; everything
+// here exists to make that state fast to query and paginate. See plan.md §2b
+// for the integration and integrity-verification design this schema supports.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  AUDITOR
+  USER
+  SYSTEM_CONNECTOR
+}
+
+enum TransferStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+}
+
+enum AuditEventType {
+  IDENTITY_CREATED
+  ROLE_ASSIGNED
+  ASSET_MINTED
+  TRANSFER_REQUESTED
+  OWNERSHIP_TRANSFERRED
+}
+
+// BEL's named Strategic Business Units (Radar, Electronic Warfare, Military
+// Comm, Cyber Security) — the SBU dimension gates facility/asset access
+// alongside clearanceLevel.
+enum Sbu {
+  SBU_RADAR
+  SBU_EW
+  SBU_MILCOMM
+  SBU_CYBER
+}
+
+enum PacsDecision {
+  GRANTED
+  DENIED
+}
+
+// One DID per person, tied to a wallet address. externalId is the only
+// integration surface with BEL's own systems (e.g. their SAP employee code) —
+// it's a plain optional join key, not a mirror of their schema.
+model User {
+  id             String   @id @default(uuid())
+  walletAddress  String   @unique
+  externalId     String?  @unique
+  displayName    String?
+  role           Role     @default(USER)
+  clearanceLevel Int
+  sbu            Sbu
+  // identityHash = keccak256(empId, fullName, sbuCode, salt), computed at
+  // registration (issue #44). identitySalt persists per-user so the hash is
+  // reproducible later by the independent verification tool.
+  identityHash   String
+  identitySalt   String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  assets               Asset[]           @relation("AssetOwner")
+  transferRequestsFrom TransferRequest[] @relation("TransferFrom")
+  transferRequestsTo   TransferRequest[] @relation("TransferTo")
+  requestedTransfers   TransferRequest[] @relation("TransferRequestedBy")
+  approvedTransfers    TransferRequest[] @relation("TransferApprovedBy")
+  auditEvents          AuditEvent[]      @relation("AuditActor")
+  pacsBadgeEvents      PacsBadgeEvent[]
+}
+
+// Mirrors an on-chain NFT. `cid` is a cache of the IPFS CID recorded on-chain
+// at mint time — it exists for fast reads, not as a second source of truth.
+// The verification job (issues.txt #30a) diffs this against the live on-chain
+// value; a mismatch means this DB row was tampered with directly.
+model Asset {
+  id                 String   @id @default(uuid())
+  tokenId            String?  @unique
+  name               String
+  cid                String
+  // Same clearance/SBU dimensions as User — asset custody is gated by both.
+  classificationTier Int
+  sbu                Sbu
+  metadata           Json?
+  mintTxHash         String?
+  ownerId            String
+  owner              User     @relation("AssetOwner", fields: [ownerId], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  transferRequests TransferRequest[]
+}
+
+// request -> approve -> execute, mirroring the on-chain transfer flow.
+model TransferRequest {
+  id            String         @id @default(uuid())
+  assetId       String
+  asset         Asset          @relation(fields: [assetId], references: [id])
+  fromUserId    String
+  fromUser      User           @relation("TransferFrom", fields: [fromUserId], references: [id])
+  toUserId      String
+  toUser        User           @relation("TransferTo", fields: [toUserId], references: [id])
+  status        TransferStatus @default(PENDING)
+  requestedById String
+  requestedBy   User           @relation("TransferRequestedBy", fields: [requestedById], references: [id])
+  approvedById  String?
+  approvedBy    User?          @relation("TransferApprovedBy", fields: [approvedById], references: [id])
+  txHash        String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// Indexed copy of on-chain events (identity/role/asset/transfer), built by the
+// event listener (issues.txt #27-28). This is the immutable audit trail the
+// problem statement asks for, made queryable. It is NOT the DB-access audit
+// log described in plan.md §2b (that one is pgaudit + app-level actor
+// stamping — a separate, ops-facing log, not modeled here).
+model AuditEvent {
+  id          String         @id @default(uuid())
+  type        AuditEventType
+  actorId     String?
+  actor       User?          @relation("AuditActor", fields: [actorId], references: [id])
+  targetId    String?
+  txHash      String
+  blockNumber BigInt
+  payload     Json?
+  createdAt   DateTime       @default(now())
+
+  @@index([type])
+  @@index([targetId])
+}
+
+// Physical access control zone (e.g. "ZONE_ANECHOIC_CHAMBER"). sbu == null
+// means the zone allows any SBU; requiredClearance still applies.
+model FacilityZone {
+  id                String   @id @default(uuid())
+  zoneId            String   @unique
+  name              String
+  sbu               Sbu?
+  requiredClearance Int
+  isEmergencyLocked Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  badgeEvents PacsBadgeEvent[]
+}
+
+// Indexed copy of PACS (Physical Access Control System) badge-in events,
+// cross-referenced against the on-chain access decision once emitted.
+model PacsBadgeEvent {
+  id            String       @id @default(uuid())
+  readerId      String
+  zoneId        String
+  zone          FacilityZone @relation(fields: [zoneId], references: [zoneId])
+  employeeId    String
+  employee      User         @relation(fields: [employeeId], references: [id])
+  decision      PacsDecision
+  denialReason  String?
+  onChainTxHash String?
+  blockNumber   BigInt?
+  scannedAt     DateTime     @default(now())
+
+  @@index([zoneId])
+  @@index([employeeId])
+}
