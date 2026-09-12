@@ -4,8 +4,7 @@
 // for the integration and integrity-verification design this schema supports.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
