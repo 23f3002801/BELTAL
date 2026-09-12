@@ -6,6 +6,7 @@ export default {
   databaseUrl: process.env.DATABASE_URL,
   rpcUrl: process.env.RPC_URL,
   contractAddress: process.env.CONTRACT_ADDRESS,
-  jwtSecret: process.env.JWT_SECRET,
+  jwtSecret: process.env.JWT_SECRET || 'trustchain-dev-secret-key-32chars-min-len',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
   ipfsApiKey: process.env.IPFS_API_KEY,
 };
