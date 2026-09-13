@@ -66,6 +66,10 @@ model User {
   // reproducible later by the independent verification tool.
   identityHash   String
   identitySalt   String
+  // CID of the AES-256-encrypted PII dossier pinned to IPFS/Pinata at
+  // registration (issue #44). Nullable only for rows that predate this field;
+  // registration always sets it going forward.
+  dossierCid     String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

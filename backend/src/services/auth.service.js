@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import config from '../config/env.js';
 import logger from '../config/logger.js';
 import prisma from '../config/db.js';
-import nonceService from './nonceService.js';
+import nonceService from './nonce.service.js';
 import ApiError from '../utils/ApiError.js';
 
 export const authService = {
@@ -78,6 +78,13 @@ export const authService = {
       } catch (dbErr) {
         logger.warn(`Database query skipped or unavailable: ${dbErr.message}`);
       }
+    }
+
+    // SYSTEM_CONNECTOR identities are machine-only (PACS/HRMS ingest via a
+    // backend-held custodial signer, see issue #74) — never reachable via the
+    // human wallet-sign-in flow, even if someone controls that wallet's key.
+    if (userRecord && userRecord.role === 'SYSTEM_CONNECTOR') {
+      throw new ApiError(403, 'System-connector identities cannot authenticate via wallet sign-in');
     }
 
     const user = userRecord
