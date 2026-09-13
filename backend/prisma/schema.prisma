@@ -32,7 +32,10 @@ enum AuditEventType {
   ROLE_ASSIGNED
   ASSET_MINTED
   TRANSFER_REQUESTED
+  TRANSFER_REJECTED
   OWNERSHIP_TRANSFERRED
+  PACS_ACCESS_GRANTED
+  PACS_ACCESS_DENIED
 }
 
 // BEL's named Strategic Business Units (Radar, Electronic Warfare, Military
@@ -143,6 +146,9 @@ model AuditEvent {
 
   @@index([type])
   @@index([targetId])
+  @@index([type, createdAt])
+  @@index([actorId])
+  @@index([txHash])
 }
 
 // Physical access control zone (e.g. "ZONE_ANECHOIC_CHAMBER"). sbu == null
