@@ -1,3 +1,11 @@
+node_modules/
+dist/
+.env
+.env.*
+*.env
+backend/scripts/
+scripts/
+
 issues.txt
 plan.md
 product.txt
@@ -8,3 +16,4 @@ CLAUDE.md
 .claude/
 .vscode/
 graphify-out/
+

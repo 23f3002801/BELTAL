@@ -1,0 +1,135 @@
+import jwt from 'jsonwebtoken';
+import { ethers } from 'ethers';
+import config from '../config/env.js';
+import logger from '../config/logger.js';
+import prisma from '../config/db.js';
+import nonceService from './nonce.service.js';
+import ApiError from '../utils/ApiError.js';
+
+export const authService = {
+  /**
+   * Request a single-use cryptographic sign-in challenge nonce
+   * @param {string} walletAddress
+   * @returns {{ walletAddress: string, nonce: string, message: string, expiresAt: string }}
+   */
+  requestNonce(walletAddress) {
+    let checksumAddress;
+    try {
+      checksumAddress = ethers.getAddress(walletAddress);
+    } catch {
+      throw new ApiError(400, 'Invalid Ethereum wallet address');
+    }
+
+    const { nonce, message, expiresAt } = nonceService.generateNonce(checksumAddress);
+
+    return {
+      walletAddress: checksumAddress,
+      nonce,
+      message,
+      expiresAt,
+    };
+  },
+
+  /**
+   * Verify an ECDSA signature against the active nonce challenge and issue a JWT
+   * @param {{ walletAddress: string, signature: string }} param0
+   * @returns {Promise<{ token: string, user: object }>}
+   */
+  async verifyWalletLogin({ walletAddress, signature }) {
+    let checksumAddress;
+    try {
+      checksumAddress = ethers.getAddress(walletAddress);
+    } catch {
+      throw new ApiError(400, 'Invalid Ethereum wallet address format');
+    }
+
+    // Retrieve active challenge message
+    const storedChallenge = nonceService.getStoredNonce(checksumAddress);
+    if (!storedChallenge) {
+      throw new ApiError(
+        401,
+        'No active authentication challenge found for this address or the challenge has expired. Please request a new nonce.'
+      );
+    }
+
+    // Recover signer address from ECDSA signature using ethers
+    let recoveredAddress;
+    try {
+      recoveredAddress = ethers.verifyMessage(storedChallenge.message, signature);
+    } catch (err) {
+      throw new ApiError(401, `Cryptographic signature verification failed: ${err.message}`);
+    }
+
+    // Strict address match verification
+    if (ethers.getAddress(recoveredAddress) !== checksumAddress) {
+      throw new ApiError(401, 'Signature does not match the provided wallet address.');
+    }
+
+    // Immediately consume nonce to prevent replay attacks
+    nonceService.consumeNonce(checksumAddress);
+
+    // Resolve user profile from DB (or generate default authenticated session if pre-onboarded)
+    let userRecord = null;
+    if (prisma) {
+      try {
+        userRecord = await prisma.user.findUnique({
+          where: { walletAddress: checksumAddress },
+        });
+      } catch (dbErr) {
+        logger.warn(`Database query skipped or unavailable: ${dbErr.message}`);
+      }
+    }
+
+    // SYSTEM_CONNECTOR identities are machine-only (PACS/HRMS ingest via a
+    // backend-held custodial signer, see issue #74) — never reachable via the
+    // human wallet-sign-in flow, even if someone controls that wallet's key.
+    if (userRecord && userRecord.role === 'SYSTEM_CONNECTOR') {
+      throw new ApiError(403, 'System-connector identities cannot authenticate via wallet sign-in');
+    }
+
+    const user = userRecord
+      ? {
+          id: userRecord.id,
+          walletAddress: userRecord.walletAddress,
+          displayName: userRecord.displayName,
+          externalId: userRecord.externalId,
+          role: userRecord.role,
+          clearanceLevel: userRecord.clearanceLevel,
+          sbu: userRecord.sbu,
+          isRegistered: true,
+        }
+      : {
+          id: null,
+          walletAddress: checksumAddress,
+          displayName: `Personnel (${checksumAddress.slice(0, 6)}...${checksumAddress.slice(-4)})`,
+          externalId: null,
+          role: 'USER',
+          clearanceLevel: 1,
+          sbu: null,
+          isRegistered: false,
+        };
+
+    // Construct JWT claims
+    const tokenPayload = {
+      sub: user.id || user.walletAddress,
+      walletAddress: user.walletAddress,
+      role: user.role,
+      clearanceLevel: user.clearanceLevel,
+      sbu: user.sbu,
+      isRegistered: user.isRegistered,
+    };
+
+    const token = jwt.sign(tokenPayload, config.jwtSecret, {
+      expiresIn: config.jwtExpiresIn,
+    });
+
+    logger.info(`Wallet authenticated successfully: ${checksumAddress} (Role: ${user.role})`);
+
+    return {
+      token,
+      user,
+    };
+  },
+};
+
+export default authService;
