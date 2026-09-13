@@ -87,11 +87,16 @@ export const assetService = {
       );
     }
 
+    const resolvedTokenId = input.tokenId || (chainResult.tokenId ? String(chainResult.tokenId) : null);
+    if (resolvedTokenId) {
+      await prisma.asset.deleteMany({ where: { tokenId: resolvedTokenId } }).catch(() => {});
+    }
+
     // 5. Persist Asset in PostgreSQL Cache
     const asset = await prisma.asset.create({
       data: {
         name: input.name,
-        tokenId: input.tokenId || (chainResult.tokenId ? String(chainResult.tokenId) : null),
+        tokenId: resolvedTokenId,
         cid,
         classificationTier: input.classificationTier,
         sbu: input.sbu,

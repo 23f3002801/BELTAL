@@ -1,6 +1,6 @@
 {
   "contractName": "IdentityRegistry",
-  "address": "0x1e39BDfA04A40fA2273d46d8eC9EEf6804C8B4c0",
+  "address": "0xeF758B25C8e5C5880fa0f26a36A1eA66E9D04aB4",
   "abi": [
     {
       "type": "constructor",
@@ -205,24 +205,24 @@
               "name": "identityHash"
             },
             {
-              "type": "uint8",
-              "name": "clearanceLevel"
-            },
-            {
               "type": "bytes32",
               "name": "sbuCode"
             },
             {
-              "type": "bool",
-              "name": "isActive"
-            },
-            {
-              "type": "uint256",
+              "type": "uint64",
               "name": "registeredAt"
             },
             {
-              "type": "uint256",
+              "type": "uint64",
               "name": "updatedAt"
+            },
+            {
+              "type": "uint8",
+              "name": "clearanceLevel"
+            },
+            {
+              "type": "bool",
+              "name": "isActive"
             }
           ]
         }
@@ -246,24 +246,24 @@
           "name": "identityHash"
         },
         {
-          "type": "uint8",
-          "name": "clearanceLevel"
-        },
-        {
           "type": "bytes32",
           "name": "sbuCode"
         },
         {
-          "type": "bool",
-          "name": "isActive"
-        },
-        {
-          "type": "uint256",
+          "type": "uint64",
           "name": "registeredAt"
         },
         {
-          "type": "uint256",
+          "type": "uint64",
           "name": "updatedAt"
+        },
+        {
+          "type": "uint8",
+          "name": "clearanceLevel"
+        },
+        {
+          "type": "bool",
+          "name": "isActive"
         }
       ]
     },

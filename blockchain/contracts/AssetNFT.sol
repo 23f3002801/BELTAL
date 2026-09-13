@@ -14,11 +14,11 @@ interface IAuditLog {
 interface IIdentityRegistry {
     struct IdentityRecord {
         bytes32 identityHash;
-        uint8 clearanceLevel;
         bytes32 sbuCode;
+        uint64 registeredAt;
+        uint64 updatedAt;
+        uint8 clearanceLevel;
         bool isActive;
-        uint256 registeredAt;
-        uint256 updatedAt;
     }
     function getIdentity(address user) external view returns (IdentityRecord memory);
 }

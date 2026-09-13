@@ -21,12 +21,12 @@ contract IdentityRegistry {
     IAuditLog public auditLog;
 
     struct IdentityRecord {
-        bytes32 identityHash; // keccak256(empid, fullname, sbucode, salt)
-        uint8 clearanceLevel; // 1 to 4
-        bytes32 sbuCode;      // "SBU_RADAR", "SBU_EW", "SBU_MILCOMM", "SBU_CYBER"
-        bool isActive;        // false = quarantined/revoked
-        uint256 registeredAt;
-        uint256 updatedAt;
+        bytes32 identityHash; // Slot 1: keccak256(empid, fullname, sbucode, salt)
+        bytes32 sbuCode;      // Slot 2: "SBU_RADAR", "SBU_EW", "SBU_MILCOMM", "SBU_CYBER"
+        uint64 registeredAt;  // Slot 3: timestamp
+        uint64 updatedAt;     // Slot 3: timestamp
+        uint8 clearanceLevel; // Slot 3: 1 to 4
+        bool isActive;        // Slot 3: false = quarantined/revoked
     }
 
     mapping(address => IdentityRecord) public identities;
@@ -67,6 +67,33 @@ contract IdentityRegistry {
         authorizedCallers[caller] = status;
     }
 
+    function _registerIdentity(
+        address user,
+        string memory did,
+        bytes32 hash,
+        uint8 clearance,
+        bytes32 sbu
+    ) internal {
+        require(user != address(0), "IdentityRegistry: Invalid user address");
+        require(bytes(did).length > 0, "IdentityRegistry: Empty DID");
+        require(hash != bytes32(0), "IdentityRegistry: Empty identity hash");
+        require(clearance >= 1 && clearance <= 4, "IdentityRegistry: Clearance must be between 1 and 4");
+        require(!identities[user].isActive, "IdentityRegistry: Identity already registered");
+
+        identities[user] = IdentityRecord({
+            identityHash: hash,
+            sbuCode: sbu,
+            registeredAt: uint64(block.timestamp),
+            updatedAt: uint64(block.timestamp),
+            clearanceLevel: clearance,
+            isActive: true
+        });
+
+        didToAddress[did] = user;
+
+        emit IdentityCreated(user, did, hash, clearance, sbu);
+    }
+
     /**
      * @notice Register a single employee DID and cryptographic identity hash
      */
@@ -77,24 +104,7 @@ contract IdentityRegistry {
         uint8 clearance,
         bytes32 sbu
     ) public onlyAuthorized {
-        require(user != address(0), "IdentityRegistry: Invalid user address");
-        require(bytes(did).length > 0, "IdentityRegistry: Empty DID");
-        require(hash != bytes32(0), "IdentityRegistry: Empty identity hash");
-        require(clearance >= 1 && clearance <= 4, "IdentityRegistry: Clearance must be between 1 and 4");
-        require(!identities[user].isActive, "IdentityRegistry: Identity already registered");
-
-        identities[user] = IdentityRecord({
-            identityHash: hash,
-            clearanceLevel: clearance,
-            sbuCode: sbu,
-            isActive: true,
-            registeredAt: block.timestamp,
-            updatedAt: block.timestamp
-        });
-
-        didToAddress[did] = user;
-
-        emit IdentityCreated(user, did, hash, clearance, sbu);
+        _registerIdentity(user, did, hash, clearance, sbu);
 
         if (address(auditLog) != address(0)) {
             try auditLog.logEvent("DID_REG", msg.sender, user, hash, did) {} catch {}
@@ -119,7 +129,11 @@ contract IdentityRegistry {
         );
 
         for (uint256 i = 0; i < len; i++) {
-            registerIdentity(users[i], dids[i], hashes[i], clearances[i], sbus[i]);
+            _registerIdentity(users[i], dids[i], hashes[i], clearances[i], sbus[i]);
+        }
+
+        if (address(auditLog) != address(0)) {
+            try auditLog.logEvent("BATCH_DID_REG", msg.sender, address(0), bytes32(len), "Batch registered DIDs") {} catch {}
         }
     }
 
@@ -132,7 +146,7 @@ contract IdentityRegistry {
 
         uint8 oldClearance = identities[user].clearanceLevel;
         identities[user].clearanceLevel = newClearance;
-        identities[user].updatedAt = block.timestamp;
+        identities[user].updatedAt = uint64(block.timestamp);
 
         emit ClearanceUpdated(user, oldClearance, newClearance);
 
@@ -148,7 +162,7 @@ contract IdentityRegistry {
         require(identities[user].isActive, "IdentityRegistry: Identity not active");
 
         identities[user].isActive = false;
-        identities[user].updatedAt = block.timestamp;
+        identities[user].updatedAt = uint64(block.timestamp);
 
         emit IdentityRevoked(user, reason);
 

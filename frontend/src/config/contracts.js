@@ -17,10 +17,10 @@ export const SEPOLIA_CONFIG = {
 };
 
 export const CONTRACT_ADDRESSES = {
-  AuditLog: import.meta.env.VITE_AUDIT_LOG_ADDRESS || AuditLogArtifact.address || '0xea89806aaAa59F322A3f30C97f812B3fC9B36e22',
-  IdentityRegistry: import.meta.env.VITE_IDENTITY_REGISTRY_ADDRESS || IdentityRegistryArtifact.address || '0x1e39BDfA04A40fA2273d46d8eC9EEf6804C8B4c0',
-  AccessControl: import.meta.env.VITE_ACCESS_CONTROL_ADDRESS || AccessControlArtifact.address || '0x8278dF42EF08584eE12333Eaaa4AA53A57f516f7',
-  AssetNFT: import.meta.env.VITE_CONTRACT_ADDRESS || AssetNFTArtifact.address || '0xf7C27dAbcBeea549c7a7C95DdB3EDfC6CB2d2B8A',
+  AuditLog: import.meta.env.VITE_AUDIT_LOG_ADDRESS || AuditLogArtifact.address || '0x49F21Cbc42b7083ffD752fF0c226D5C84A65b336',
+  IdentityRegistry: import.meta.env.VITE_IDENTITY_REGISTRY_ADDRESS || IdentityRegistryArtifact.address || '0xeF758B25C8e5C5880fa0f26a36A1eA66E9D04aB4',
+  AccessControl: import.meta.env.VITE_ACCESS_CONTROL_ADDRESS || AccessControlArtifact.address || '0xE1B252E8811DD52c83F6C9234D36Ca5E5FF552E7',
+  AssetNFT: import.meta.env.VITE_CONTRACT_ADDRESS || AssetNFTArtifact.address || '0xaFCB6CEf019c4dB0B3711A809ff63a80D747FCf4',
 };
 
 export const CONTRACT_ABIS = {
