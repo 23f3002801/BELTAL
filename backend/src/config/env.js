@@ -1,5 +1,13 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env explicitly from backend directory regardless of cwd
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // One service-level secret (like JWT_SECRET), not per-user. In production this
 // would come from a KMS/secrets manager via envelope encryption (a master key
@@ -27,5 +35,6 @@ export default {
   pinataApiKey: process.env.PINATA_API_KEY,
   pinataApiSecret: process.env.PINATA_API_SECRET,
   pinataGateway: process.env.PINATA_GATEWAY || 'https://gateway.pinata.cloud/ipfs',
+  deployerPrivateKey: process.env.DEPLOYER_PRIVATE_KEY || process.env.PRIVATE_KEY,
   dossierEncryptionKey,
 };

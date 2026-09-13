@@ -1,15 +1,42 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { ethers } from 'ethers';
 import provider from '../config/blockchain.js';
 import config from '../config/env.js';
 import logger from '../config/logger.js';
 
-// No Contract instance yet — ABI/address pending sign-off with the blockchain
-// sub-team (issues.txt #94, GitHub #78). Every method below degrades to a
-// logged no-op instead of throwing, so the rest of the write flow (DB cache
-// write, IPFS dossier pin) stays fully usable in the meantime. Once a real
-// ethers.Contract can be built (provider + CONTRACT_ADDRESS + ABI), wire it in
-// here — callers don't need to change.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const contractArtifactPath = path.join(__dirname, '../config/contracts/AssetNFT.json');
+
+let assetNftAbi = null;
+try {
+  if (fs.existsSync(contractArtifactPath)) {
+    const raw = fs.readFileSync(contractArtifactPath, 'utf8');
+    assetNftAbi = JSON.parse(raw).abi;
+  }
+} catch (err) {
+  logger.warn(`Failed to load AssetNFT ABI: ${err.message}`);
+}
+
 function isConfigured() {
-  return Boolean(provider && config.contractAddress);
+  return Boolean(provider && config.contractAddress && assetNftAbi);
+}
+
+function getSigner() {
+  if (!config.deployerPrivateKey || !provider) return null;
+  try {
+    return new ethers.Wallet(config.deployerPrivateKey.trim(), provider);
+  } catch {
+    return null;
+  }
+}
+
+function getAssetContract() {
+  const signer = getSigner();
+  if (!signer || !config.contractAddress || !assetNftAbi) return null;
+  return new ethers.Contract(config.contractAddress, assetNftAbi, signer);
 }
 
 export const chainService = {
@@ -23,9 +50,9 @@ export const chainService = {
       return { txHash: null, blockNumber: null, confirmed: false };
     }
 
-    // TODO(#78/#94): contract.registerIdentity(walletAddress, identityHash) once
-    // the ABI/address are agreed with the blockchain sub-team.
-    throw new Error('CONTRACT_ADDRESS is set but registerIdentityOnChain has no contract wiring yet');
+    // Degrades gracefully pending IdentityRegistry contract deployment
+    logger.warn(`On-chain identity registration skipped for ${walletAddress} — IdentityRegistry pending deployment.`);
+    return { txHash: null, blockNumber: null, confirmed: false };
   },
 
   async assignRoleOnChain({ walletAddress, role, clearanceLevel }) {
@@ -36,32 +63,83 @@ export const chainService = {
       return { txHash: null, blockNumber: null, confirmed: false };
     }
 
-    // TODO(#78/#94): contract.assignRole(walletAddress, role, clearanceLevel).
-    throw new Error('CONTRACT_ADDRESS is set but assignRoleOnChain has no contract wiring yet');
+    logger.warn(`On-chain role assignment skipped for ${walletAddress} — IdentityRegistry pending deployment.`);
+    return { txHash: null, blockNumber: null, confirmed: false };
   },
 
   async mintAssetOnChain({ custodianWallet, assetTag, classificationTier, sbu, ipfsCid }) {
-    if (!isConfigured()) {
+    const contract = getAssetContract();
+    if (!isConfigured() || !contract) {
       logger.warn(
-        `On-chain asset minting skipped for ${custodianWallet} (${assetTag || 'Asset'}) — contract not yet configured (pending ABI, see #78/#94).`
+        `On-chain asset minting skipped for ${custodianWallet} (${assetTag || 'Asset'}) — contract or deployer key not configured.`
       );
       return { txHash: null, blockNumber: null, tokenId: null, confirmed: false };
     }
 
-    // TODO(#78/#94): contract.mintAsset(custodianWallet, assetTag, classificationTier, sbu, ipfsCid)
-    throw new Error('CONTRACT_ADDRESS is set but mintAssetOnChain has no contract wiring yet');
+    try {
+      const sbuBytes32 = ethers.encodeBytes32String((sbu || 'SBU_RADAR').slice(0, 31));
+      const tx = await contract.mintAsset(
+        custodianWallet,
+        assetTag || 'BEL-ASSET',
+        classificationTier,
+        sbuBytes32,
+        `ipfs://${ipfsCid || ''}`
+      );
+      const receipt = await tx.wait();
+
+      let tokenId = null;
+      for (const log of receipt.logs) {
+        try {
+          const parsed = contract.interface.parseLog(log);
+          if (parsed && parsed.name === 'AssetMinted') {
+            tokenId = parsed.args.tokenId.toString();
+            break;
+          }
+        } catch {
+          // ignore unparsed logs
+        }
+      }
+
+      logger.info(`Asset minted on Ethereum Sepolia: Token #${tokenId}, Tx: ${receipt.hash}`);
+      return {
+        txHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        tokenId,
+        confirmed: true,
+      };
+    } catch (err) {
+      logger.error(`On-chain asset minting transaction failed: ${err.message}`);
+      return { txHash: null, blockNumber: null, tokenId: null, confirmed: false, error: err.message };
+    }
   },
 
   async reassignCustodyOnChain({ tokenId, newCustodianWallet, reason }) {
-    if (!isConfigured()) {
+    const contract = getAssetContract();
+    if (!isConfigured() || !contract || !tokenId) {
       logger.warn(
-        `On-chain custody reassignment skipped for token #${tokenId} to ${newCustodianWallet} — contract not yet configured (pending ABI, see #78/#94).`
+        `On-chain custody reassignment skipped for token #${tokenId} to ${newCustodianWallet} — contract/deployer or tokenId not present.`
       );
       return { txHash: null, blockNumber: null, confirmed: false };
     }
 
-    // TODO(#78/#94): contract.reassignCustody(tokenId, newCustodianWallet, reason)
-    throw new Error('CONTRACT_ADDRESS is set but reassignCustodyOnChain has no contract wiring yet');
+    try {
+      const tx = await contract.reassignCustody(
+        BigInt(tokenId),
+        newCustodianWallet,
+        reason || 'AUTHORIZED_HANDOVER'
+      );
+      const receipt = await tx.wait();
+
+      logger.info(`Custody reassigned on Ethereum Sepolia: Token #${tokenId} -> ${newCustodianWallet}, Tx: ${receipt.hash}`);
+      return {
+        txHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        confirmed: true,
+      };
+    } catch (err) {
+      logger.error(`On-chain custody reassignment failed: ${err.message}`);
+      return { txHash: null, blockNumber: null, confirmed: false, error: err.message };
+    }
   },
 };
 

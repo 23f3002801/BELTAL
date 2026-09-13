@@ -1,0 +1,20 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "rpcUrl": "https://ethereum-sepolia-rpc.publicnode.com",
+  "explorerUrl": "https://sepolia.etherscan.io",
+  "contracts": {
+    "AssetNFT": {
+      "address": "0x764a4993CfeF679AA0999d7Fa324D16c66d07E0a",
+      "deployer": "0x334eEfB6fc223ABf74D5F00E635B63c544689E8f",
+      "deploymentTx": "0xfb7f348289b3c3fc30fae8eb4584782553b59e4fc791ea4cae1c0b934a62e123",
+      "deployedAt": "2026-09-13T18:18:22Z",
+      "standard": "Soulbound Custody Token (ERC-721 Non-Transferable)",
+      "etherscan": "https://sepolia.etherscan.io/address/0x764a4993CfeF679AA0999d7Fa324D16c66d07E0a"
+    }
+  },
+  "verifiedTransactions": {
+    "testMint": "0xfc9c7c16b034f671f800644a077aecd00ff93749aab2dc2f378819beed5cfc80",
+    "testCustodyReassignment": "0xb06742f5a478c71d18650a928370bab962b8d285b33ca26121114b03690258bf"
+  }
+}

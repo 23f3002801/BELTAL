@@ -80,6 +80,8 @@ model User {
   approvedTransfers    TransferRequest[] @relation("TransferApprovedBy")
   auditEvents          AuditEvent[]      @relation("AuditActor")
   pacsBadgeEvents      PacsBadgeEvent[]
+  crossSbuPasses       CrossSbuPass[]    @relation("UserCrossSbuPasses")
+  issuedCrossSbuPasses CrossSbuPass[]    @relation("IssuedCrossSbuPasses")
 }
 
 // Mirrors an on-chain NFT. `cid` is a cache of the IPFS CID recorded on-chain
@@ -175,4 +177,20 @@ model PacsBadgeEvent {
 
   @@index([zoneId])
   @@index([employeeId])
+}
+
+// Time-boxed cross-department access pass for custody transfers and zone access (Issue #46)
+model CrossSbuPass {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation("UserCrossSbuPasses", fields: [userId], references: [id])
+  targetSbu   Sbu
+  validUntil  DateTime
+  reason      String?
+  issuedById  String
+  issuedBy    User     @relation("IssuedCrossSbuPasses", fields: [issuedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, targetSbu])
 }
