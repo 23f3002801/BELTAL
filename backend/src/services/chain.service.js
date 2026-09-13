@@ -39,6 +39,30 @@ export const chainService = {
     // TODO(#78/#94): contract.assignRole(walletAddress, role, clearanceLevel).
     throw new Error('CONTRACT_ADDRESS is set but assignRoleOnChain has no contract wiring yet');
   },
+
+  async mintAssetOnChain({ custodianWallet, assetTag, classificationTier, sbu, ipfsCid }) {
+    if (!isConfigured()) {
+      logger.warn(
+        `On-chain asset minting skipped for ${custodianWallet} (${assetTag || 'Asset'}) — contract not yet configured (pending ABI, see #78/#94).`
+      );
+      return { txHash: null, blockNumber: null, tokenId: null, confirmed: false };
+    }
+
+    // TODO(#78/#94): contract.mintAsset(custodianWallet, assetTag, classificationTier, sbu, ipfsCid)
+    throw new Error('CONTRACT_ADDRESS is set but mintAssetOnChain has no contract wiring yet');
+  },
+
+  async reassignCustodyOnChain({ tokenId, newCustodianWallet, reason }) {
+    if (!isConfigured()) {
+      logger.warn(
+        `On-chain custody reassignment skipped for token #${tokenId} to ${newCustodianWallet} — contract not yet configured (pending ABI, see #78/#94).`
+      );
+      return { txHash: null, blockNumber: null, confirmed: false };
+    }
+
+    // TODO(#78/#94): contract.reassignCustody(tokenId, newCustodianWallet, reason)
+    throw new Error('CONTRACT_ADDRESS is set but reassignCustodyOnChain has no contract wiring yet');
+  },
 };
 
 export default chainService;
