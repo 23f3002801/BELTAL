@@ -6,7 +6,7 @@ const PINATA_PIN_JSON_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS';
 
 export const ipfsService = {
   isConfigured() {
-    return Boolean(config.pinataJwt);
+    return Boolean(config.pinataJwt || (config.pinataApiKey && config.pinataApiSecret));
   },
 
   /**
@@ -16,20 +16,40 @@ export const ipfsService = {
    */
   async pinJson(payload, { name } = {}) {
     if (!this.isConfigured()) {
-      throw new ApiError(503, 'IPFS/Pinata is not configured (PINATA_JWT missing)');
+      throw new ApiError(503, 'IPFS/Pinata is not configured (PINATA_JWT or PINATA_API_KEY/SECRET missing)');
     }
 
-    const response = await fetch(PINATA_PIN_JSON_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.pinataJwt}`,
-      },
-      body: JSON.stringify({
-        pinataContent: payload,
-        ...(name ? { pinataMetadata: { name } } : {}),
-      }),
+    const getHeaders = (useApiKey = false) => {
+      const headers = { 'Content-Type': 'application/json' };
+      if (!useApiKey && config.pinataJwt) {
+        headers.Authorization = `Bearer ${config.pinataJwt}`;
+      } else if (config.pinataApiKey && config.pinataApiSecret) {
+        headers.pinata_api_key = config.pinataApiKey;
+        headers.pinata_secret_api_key = config.pinataApiSecret;
+      }
+      return headers;
+    };
+
+    const body = JSON.stringify({
+      pinataContent: payload,
+      ...(name ? { pinataMetadata: { name } } : {}),
     });
+
+    let response = await fetch(PINATA_PIN_JSON_URL, {
+      method: 'POST',
+      headers: getHeaders(false),
+      body,
+    });
+
+    // If JWT failed and API key/secret are available, retry with API key/secret
+    if (!response.ok && config.pinataApiKey && config.pinataApiSecret && config.pinataJwt) {
+      logger.warn('Pinata JWT auth failed, retrying with PINATA_API_KEY and PINATA_API_SECRET...');
+      response = await fetch(PINATA_PIN_JSON_URL, {
+        method: 'POST',
+        headers: getHeaders(true),
+        body,
+      });
+    }
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');

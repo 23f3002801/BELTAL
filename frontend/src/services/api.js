@@ -1,34 +1,36 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
-    headers: {
-        'Content-Type': 'application/json',
-    },
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// Auto-inject JWT from localStorage into headers
+// Request interceptor to attach JWT auth token
 api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
+  (config) => {
+    const token = localStorage.getItem('trustchain_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor for token expiry / 401 handling
+// Response interceptor for auth expiration handling
 api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/';
-        }
-        return Promise.reject(error);
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('trustchain_token');
+      localStorage.removeItem('trustchain_user');
     }
+    return Promise.reject(error);
+  }
 );
 
 export default api;
