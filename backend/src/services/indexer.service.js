@@ -30,6 +30,15 @@ const assetNftAbi = loadAbi('AssetNFT');
 const identityRegistryAbi = loadAbi('IdentityRegistry');
 const accessControlAbi = loadAbi('AccessControl');
 
+// AccessControl.sol grants/revokes roles as keccak256(`ROLE_<NAME>`) rather than
+// a readable bytes32 string, so build a reverse lookup for the app-level roles
+// we know about (see ROLE_VALUES in admin.validator.js) purely for readable
+// audit payloads — falls back to the raw hash for anything unrecognized.
+const KNOWN_ROLES = ['ADMIN', 'MANAGER', 'AUDITOR', 'USER', 'SYSTEM_CONNECTOR'];
+const roleHashToName = new Map(
+  KNOWN_ROLES.map((name) => [ethers.keccak256(ethers.toUtf8Bytes(`ROLE_${name}`)), name])
+);
+
 async function upsertAuditEvent({ type, actorId, targetId, txHash, blockNumber, payload }) {
   if (!prisma) return;
   try {
