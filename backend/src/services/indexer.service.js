@@ -267,56 +267,39 @@ export async function startIndexer() {
     }
   }
 
-  // 4. Subscribe to AccessControl.sol (role grants/revocations — issue #44)
+  // 4. Subscribe to AccessControl.sol (Emergency lockdown toggles, issue #76)
   if (config.accessControlAddress && accessControlAbi) {
     try {
-      const accessContract = new ethers.Contract(config.accessControlAddress, accessControlAbi, provider);
+      const accessControlContract = new ethers.Contract(config.accessControlAddress, accessControlAbi, provider);
 
-      accessContract.on('RoleGranted', async (role, account, sender, event) => {
+      accessControlContract.on('EmergencyLockdownToggled', async (zoneId, isLockedDown, actor, event) => {
         try {
           const txHash = event.log?.transactionHash || event.transactionHash;
           const blockNumber = event.log?.blockNumber ?? event.blockNumber ?? 0;
-          const actorUser = await resolveUserByWallet(sender);
+          const zoneIdStr = ethers.decodeBytes32String(zoneId);
+          const actorUser = await resolveUserByWallet(actor);
 
+          logger.info(`[Indexer] EmergencyLockdownToggled: zone ${zoneIdStr} -> ${isLockedDown ? 'LOCKED' : 'UNLOCKED'} (Actor: ${actor})`);
+
+          // No dedicated AuditEventType for zone-lockdown admin actions exists
+          // in the schema; ROLE_ASSIGNED is the closest existing bucket for
+          // an access-control configuration change (same family as
+          // ClearanceUpdated above) — payload.eventSource disambiguates it.
           await upsertAuditEvent({
             type: 'ROLE_ASSIGNED',
             actorId: actorUser?.id || null,
-            targetId: account,
+            targetId: zoneIdStr,
             txHash,
             blockNumber,
             payload: {
-              action: 'GRANTED',
-              role: roleHashToName.get(role) || role,
-              account,
-              grantedBy: sender,
+              eventSource: 'EMERGENCY_LOCKDOWN_TOGGLE',
+              zoneId: zoneIdStr,
+              isLockedDown,
+              actor,
             },
           });
         } catch (err) {
-          logger.error(`[Indexer] RoleGranted error: ${err.message}`);
-        }
-      });
-
-      accessContract.on('RoleRevoked', async (role, account, sender, event) => {
-        try {
-          const txHash = event.log?.transactionHash || event.transactionHash;
-          const blockNumber = event.log?.blockNumber ?? event.blockNumber ?? 0;
-          const actorUser = await resolveUserByWallet(sender);
-
-          await upsertAuditEvent({
-            type: 'ROLE_ASSIGNED',
-            actorId: actorUser?.id || null,
-            targetId: account,
-            txHash,
-            blockNumber,
-            payload: {
-              action: 'REVOKED',
-              role: roleHashToName.get(role) || role,
-              account,
-              revokedBy: sender,
-            },
-          });
-        } catch (err) {
-          logger.error(`[Indexer] RoleRevoked error: ${err.message}`);
+          logger.error(`[Indexer] EmergencyLockdownToggled error: ${err.message}`);
         }
       });
 
