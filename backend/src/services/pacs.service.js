@@ -94,6 +94,38 @@ export const pacsService = {
     };
   },
 
+  /**
+   * Admin-only emergency lockdown toggle (issue #76). Requires the zone to
+   * already exist (there is no zone-creation endpoint in scope here).
+   */
+  async setZoneLockdown(zoneId, locked, adminUser) {
+    if (!prisma) throw new ApiError(503, 'Database unavailable');
+
+    const zone = await prisma.facilityZone.findUnique({ where: { zoneId } });
+    if (!zone) {
+      throw new ApiError(404, `Unknown facility zone ${zoneId} — it must already exist (no zone-creation endpoint in scope)`);
+    }
+
+    const chainResult = await chainService.toggleEmergencyLockdownOnChain({ zoneId, status: locked });
+    if (!chainResult.confirmed) {
+      logger.warn(`Emergency lockdown toggle for zone ${zoneId} applied off-chain only pending on-chain confirmation.`);
+    }
+
+    const updated = await prisma.facilityZone.update({
+      where: { zoneId },
+      data: { isEmergencyLocked: locked },
+    });
+
+    logger.info(
+      `[PACS] Zone ${zoneId} emergency lockdown ${locked ? 'ENABLED' : 'DISABLED'} by admin ${adminUser?.walletAddress || adminUser?.id}`
+    );
+
+    return {
+      zoneId: updated.zoneId,
+      isEmergencyLocked: updated.isEmergencyLocked,
+      chain: chainResult,
+    };
+  },
 };
 
 export default pacsService;

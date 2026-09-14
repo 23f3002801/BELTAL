@@ -8,4 +8,8 @@ export const badgeEventSchema = z.object({
   employeeId: z.string({ required_error: 'employeeId is required' }).trim().min(1),
 });
 
-export default { badgeEventSchema };
+export const lockdownSchema = z.object({
+  locked: z.boolean({ required_error: 'locked is required' }),
+});
+
+export default { badgeEventSchema, lockdownSchema };

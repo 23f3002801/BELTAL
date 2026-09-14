@@ -258,6 +258,48 @@ export async function startIndexer() {
     }
   }
 
+  // 4. Subscribe to AccessControl.sol (Emergency lockdown toggles, issue #76)
+  if (config.accessControlAddress && accessControlAbi) {
+    try {
+      const accessControlContract = new ethers.Contract(config.accessControlAddress, accessControlAbi, provider);
+
+      accessControlContract.on('EmergencyLockdownToggled', async (zoneId, isLockedDown, actor, event) => {
+        try {
+          const txHash = event.log?.transactionHash || event.transactionHash;
+          const blockNumber = event.log?.blockNumber ?? event.blockNumber ?? 0;
+          const zoneIdStr = ethers.decodeBytes32String(zoneId);
+          const actorUser = await resolveUserByWallet(actor);
+
+          logger.info(`[Indexer] EmergencyLockdownToggled: zone ${zoneIdStr} -> ${isLockedDown ? 'LOCKED' : 'UNLOCKED'} (Actor: ${actor})`);
+
+          // No dedicated AuditEventType for zone-lockdown admin actions exists
+          // in the schema; ROLE_ASSIGNED is the closest existing bucket for
+          // an access-control configuration change (same family as
+          // ClearanceUpdated above) — payload.eventSource disambiguates it.
+          await upsertAuditEvent({
+            type: 'ROLE_ASSIGNED',
+            actorId: actorUser?.id || null,
+            targetId: zoneIdStr,
+            txHash,
+            blockNumber,
+            payload: {
+              eventSource: 'EMERGENCY_LOCKDOWN_TOGGLE',
+              zoneId: zoneIdStr,
+              isLockedDown,
+              actor,
+            },
+          });
+        } catch (err) {
+          logger.error(`[Indexer] EmergencyLockdownToggled error: ${err.message}`);
+        }
+      });
+
+      logger.info(`[Indexer] Subscribed to AccessControl (${config.accessControlAddress})`);
+    } catch (err) {
+      logger.warn(`[Indexer] Failed to attach AccessControl listener: ${err.message}`);
+    }
+  }
+
   logger.info('[Indexer] Multi-contract on-chain event indexer active on Ethereum Sepolia!');
 }
 

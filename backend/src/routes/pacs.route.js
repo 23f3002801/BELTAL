@@ -4,7 +4,7 @@ import { requireRole } from '../middleware/rbac.middleware.js';
 import validate from '../middleware/validate.js';
 import machineIngestLimiter from '../middleware/machineRateLimit.js';
 import pacsController from '../controllers/pacs.controller.js';
-import { badgeEventSchema } from '../validators/pacs.validator.js';
+import { badgeEventSchema, lockdownSchema } from '../validators/pacs.validator.js';
 
 const router = express.Router();
 
@@ -20,6 +20,17 @@ router.post(
   requireRole('SYSTEM_CONNECTOR'),
   validate(badgeEventSchema),
   pacsController.badgeEvent
+);
+
+/**
+ * Emergency lockdown toggle for a facility zone — admin only (issue #76).
+ */
+router.patch(
+  '/zones/:zoneId/lockdown',
+  authenticate,
+  requireRole('ADMIN'),
+  validate(lockdownSchema),
+  pacsController.setZoneLockdown
 );
 
 export default router;

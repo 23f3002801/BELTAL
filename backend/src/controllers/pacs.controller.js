@@ -16,6 +16,22 @@ export const pacsController = {
       next(err);
     }
   },
+
+  /**
+   * PATCH /api/pacs/zones/:zoneId/lockdown — admin emergency lockdown toggle
+   * (issue #76).
+   */
+  async setZoneLockdown(req, res, next) {
+    try {
+      const result = await pacsService.setZoneLockdown(req.params.zoneId, req.body.locked, req.user);
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
 };
 
 export default pacsController;

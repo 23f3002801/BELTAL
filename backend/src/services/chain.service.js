@@ -255,6 +255,34 @@ export const chainService = {
   },
 
   /**
+   * Admin: flip a facility zone's emergency lockdown flag on-chain (Issue #76).
+   * A locked zone denies all canAccessZone() checks regardless of clearance/SBU.
+   */
+  async toggleEmergencyLockdownOnChain({ zoneId, status }) {
+    const contract = this.getAccessControlContract(true);
+    if (!contract) {
+      logger.warn(`On-chain emergency lockdown toggle skipped for zone ${zoneId} — AccessControl contract not configured.`);
+      return { txHash: null, blockNumber: null, confirmed: false };
+    }
+
+    try {
+      const zoneBytes32 = ethers.encodeBytes32String(zoneId.slice(0, 31));
+      const tx = await contract.toggleEmergencyLockdown(zoneBytes32, status);
+      const receipt = await tx.wait();
+
+      logger.info(`Zone ${zoneId} emergency lockdown ${status ? 'ENABLED' : 'DISABLED'} on Ethereum Sepolia, Tx: ${receipt.hash}`);
+      return {
+        txHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        confirmed: true,
+      };
+    } catch (err) {
+      logger.error(`On-chain emergency lockdown toggle failed: ${err.message}`);
+      return { txHash: null, blockNumber: null, confirmed: false, error: err.message };
+    }
+  },
+
+  /**
    * Mint defence hardware soulbound custody NFT (Issue #89)
    */
   async mintAssetOnChain({ custodianWallet, assetTag, serialNumber, classificationTier, sbu, ipfsCid }) {
