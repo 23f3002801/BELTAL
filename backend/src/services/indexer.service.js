@@ -30,6 +30,15 @@ const assetNftAbi = loadAbi('AssetNFT');
 const identityRegistryAbi = loadAbi('IdentityRegistry');
 const accessControlAbi = loadAbi('AccessControl');
 
+// AccessControl.sol grants/revokes roles as keccak256(`ROLE_<NAME>`) rather than
+// a readable bytes32 string, so build a reverse lookup for the app-level roles
+// we know about (see ROLE_VALUES in admin.validator.js) purely for readable
+// audit payloads — falls back to the raw hash for anything unrecognized.
+const KNOWN_ROLES = ['ADMIN', 'MANAGER', 'AUDITOR', 'USER', 'SYSTEM_CONNECTOR'];
+const roleHashToName = new Map(
+  KNOWN_ROLES.map((name) => [ethers.keccak256(ethers.toUtf8Bytes(`ROLE_${name}`)), name])
+);
+
 async function upsertAuditEvent({ type, actorId, targetId, txHash, blockNumber, payload }) {
   if (!prisma) return;
   try {
@@ -255,6 +264,65 @@ export async function startIndexer() {
       logger.info(`[Indexer] Subscribed to IdentityRegistry (${config.identityRegistryAddress})`);
     } catch (err) {
       logger.warn(`[Indexer] Failed to attach IdentityRegistry listener: ${err.message}`);
+    }
+  }
+
+  // 4. Subscribe to AccessControl.sol (role grants/revocations — issue #44)
+  if (config.accessControlAddress && accessControlAbi) {
+    try {
+      const accessContract = new ethers.Contract(config.accessControlAddress, accessControlAbi, provider);
+
+      accessContract.on('RoleGranted', async (role, account, sender, event) => {
+        try {
+          const txHash = event.log?.transactionHash || event.transactionHash;
+          const blockNumber = event.log?.blockNumber ?? event.blockNumber ?? 0;
+          const actorUser = await resolveUserByWallet(sender);
+
+          await upsertAuditEvent({
+            type: 'ROLE_ASSIGNED',
+            actorId: actorUser?.id || null,
+            targetId: account,
+            txHash,
+            blockNumber,
+            payload: {
+              action: 'GRANTED',
+              role: roleHashToName.get(role) || role,
+              account,
+              grantedBy: sender,
+            },
+          });
+        } catch (err) {
+          logger.error(`[Indexer] RoleGranted error: ${err.message}`);
+        }
+      });
+
+      accessContract.on('RoleRevoked', async (role, account, sender, event) => {
+        try {
+          const txHash = event.log?.transactionHash || event.transactionHash;
+          const blockNumber = event.log?.blockNumber ?? event.blockNumber ?? 0;
+          const actorUser = await resolveUserByWallet(sender);
+
+          await upsertAuditEvent({
+            type: 'ROLE_ASSIGNED',
+            actorId: actorUser?.id || null,
+            targetId: account,
+            txHash,
+            blockNumber,
+            payload: {
+              action: 'REVOKED',
+              role: roleHashToName.get(role) || role,
+              account,
+              revokedBy: sender,
+            },
+          });
+        } catch (err) {
+          logger.error(`[Indexer] RoleRevoked error: ${err.message}`);
+        }
+      });
+
+      logger.info(`[Indexer] Subscribed to AccessControl (${config.accessControlAddress})`);
+    } catch (err) {
+      logger.warn(`[Indexer] Failed to attach AccessControl listener: ${err.message}`);
     }
   }
 
