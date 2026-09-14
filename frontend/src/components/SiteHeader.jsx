@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { Menu, X } from 'lucide-react'
 
 /* ── Brand lockup ────────────────────────────────────────── */
 function BELNavBrand() {
@@ -62,8 +63,9 @@ export default function SiteHeader({ mode = 'home' }) {
     { label: 'About BEL',  href: isHome ? '#about-bel'   : '/#about-bel' },
   ]
 
-  const [activeTab,      setActiveTab]      = useState('#platform')
-  const [indicatorStyle, setIndicatorStyle] = useState({ translateX: 0, width: 0, opacity: 0 })
+  const [activeTab,       setActiveTab]      = useState('#platform')
+  const [indicatorStyle,  setIndicatorStyle] = useState({ translateX: 0, width: 0, opacity: 0 })
+  const [isMenuOpen,      setIsMenuOpen]     = useState(false)
   const navRefs  = useRef({})
   const navigate = useNavigate()
 
@@ -122,7 +124,21 @@ export default function SiteHeader({ mode = 'home' }) {
     return () => observers.forEach(o => o.disconnect())
   }, [isHome]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  /* Close the mobile menu on Escape, or if the viewport grows past the md breakpoint */
+  useEffect(() => {
+    if (!isMenuOpen) return
+    const handleKeyDown = e => { if (e.key === 'Escape') setIsMenuOpen(false) }
+    const handleResize = () => { if (window.innerWidth >= 768) setIsMenuOpen(false) }
+    document.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('resize', handleResize)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [isMenuOpen])
+
   const handleClick = (e, href) => {
+    setIsMenuOpen(false)
     if (!isHome) return               // let browser follow /#section normally
     e.preventDefault()
     setActiveTab(href)
@@ -189,16 +205,61 @@ export default function SiteHeader({ mode = 'home' }) {
         <div className="flex items-center gap-space-md">
           <button
             onClick={() => navigate('/contact')}
-            className="bg-secondary text-on-secondary hover:bg-primary-container font-label-md text-label-md px-space-lg py-space-sm rounded-lg transition-colors flex items-center shadow-sm cursor-pointer"
+            className="hidden md:inline-flex bg-secondary text-on-secondary hover:bg-primary-container font-label-md text-label-md px-space-lg py-space-sm rounded-lg transition-colors items-center shadow-sm cursor-pointer"
           >
             Contact Us
           </button>
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center" aria-hidden="true">
             <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
           </div>
+
+          {/* Mobile menu toggle */}
+          <button
+            type="button"
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-primary-container hover:bg-surface-container-low transition-colors cursor-pointer"
+            aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-nav-panel"
+            onClick={() => setIsMenuOpen(open => !open)}
+          >
+            {isMenuOpen ? <X aria-hidden="true" className="w-5 h-5" /> : <Menu aria-hidden="true" className="w-5 h-5" />}
+          </button>
         </div>
 
       </div>
+
+      {/* Mobile nav panel */}
+      {isMenuOpen && (
+        <nav
+          id="mobile-nav-panel"
+          aria-label="Mobile navigation"
+          className="md:hidden border-t border-surface-container-highest bg-[#FFFDF5] px-margin py-space-md flex flex-col gap-1"
+        >
+          {navLinks.map(({ label, href }) => {
+            const isActive = isHome && activeTab === href
+            return (
+              <a
+                key={href}
+                href={href}
+                onClick={e => handleClick(e, href)}
+                className={
+                  isActive
+                    ? 'font-title-md text-title-md font-bold text-secondary py-space-sm px-space-sm rounded-lg'
+                    : 'font-title-md text-title-md text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors py-space-sm px-space-sm rounded-lg'
+                }
+              >
+                {label}
+              </a>
+            )
+          })}
+          <button
+            onClick={() => { setIsMenuOpen(false); navigate('/contact') }}
+            className="mt-space-sm bg-secondary text-on-secondary hover:bg-primary-container font-label-md text-label-md px-space-lg py-space-sm rounded-lg transition-colors flex items-center justify-center shadow-sm cursor-pointer"
+          >
+            Contact Us
+          </button>
+        </nav>
+      )}
     </header>
   )
 }
