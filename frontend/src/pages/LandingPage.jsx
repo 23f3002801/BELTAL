@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import SiteHeader from '../components/SiteHeader'
 
 /**
  * LandingPage — faithful React conversion of code.html
@@ -21,6 +23,79 @@ import { useState, useEffect } from 'react'
  */
 
 /* ─────────────────────────────────────────────────────────
+   BEL BRAND COMPONENTS
+───────────────────────────────────────────────────────── */
+
+/** Inline shield SVG — reused across sizes */
+function BELShieldSVG({ className = 'h-10 w-10' }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" className={className}>
+      <rect width="100" height="100" rx="20" fill="#031024" />
+      <circle cx="50" cy="50" r="42" stroke="#0284C7" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.6" />
+      <path d="M50 18L76 28V50C76 66 65 78 50 83C35 78 24 66 24 50V28L50 18Z" fill="#0A2540" stroke="#00D2FE" strokeWidth="2.5" />
+      <polygon points="50,30 65,39 65,57 50,66 35,57 35,39" fill="#134E5E" stroke="#38BDF8" strokeWidth="1.5" />
+      <circle cx="50" cy="48" r="6" fill="#F59E0B" />
+      <path d="M50 54V62M45 58H55" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+/**
+ * Horizontal brand lockup for the Navbar.
+ * Shield image | BEL pill + tagline + wordmark + sub-tagline
+ */
+function BELNavBrand() {
+  return (
+    <div className="flex items-center gap-3.5 py-1">
+      {/* Shield Emblem */}
+      <img
+        src="/bel-shield.svg"
+        alt="BEL Emblem"
+        className="h-14 md:h-16 w-auto object-contain flex-shrink-0 drop-shadow-sm"
+      />
+
+      {/* Brand Text Cluster */}
+      <div className="flex flex-col justify-center">
+        {/* Top Tagline with Pill */}
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="bg-[#0B1E36] text-white text-[10px] font-black px-1.5 py-0.5 rounded tracking-wider uppercase">
+            BEL
+          </span>
+          <span className="text-[10.5px] font-bold tracking-[0.14em] text-[#A37E2C] uppercase">
+            Govt. of India • Sovereign Ledger
+          </span>
+        </div>
+
+        {/* Main Wordmark */}
+        <div className="text-2xl md:text-3xl font-black tracking-wider leading-none">
+          <span className="text-[#0B2545]">BEL</span>
+          <span className="text-[#1565C0]">TAL</span>
+        </div>
+
+        {/* Sub-tagline with Accent Border */}
+        <div className="pt-0.5 border-b-2 border-[#C59B27] w-fit">
+          <span className="text-[8.5px] font-bold tracking-wider text-slate-500 uppercase block">
+            Blockchain-Enabled Trusted Access & Digital Asset Ledger &amp; ASSET PROVENANCE
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Clean shield badge for the footer — no outer card */
+function BELFooterBadge() {
+  return (
+    <img
+      src="/bel-shield.svg"
+      alt="BEL Shield"
+      className="h-12 w-auto object-contain"
+    />
+  )
+}
+
+
+/* ─────────────────────────────────────────────────────────
    GOVERNMENT BANNER  (code.html lines 46-54)
 ───────────────────────────────────────────────────────── */
 function GovBanner() {
@@ -41,78 +116,430 @@ function GovBanner() {
 }
 
 /* ─────────────────────────────────────────────────────────
-   HEADER / NAV  (code.html lines 55-87)
+   CONTACT US MODAL
+───────────────────────────────────────────────────────── */
+function ContactModal({ onClose }) {
+  const [submitted, setSubmitted] = useState(false)
+  const [form, setForm] = useState({ name: '', designation: '', email: '', inquiryType: '', message: '' })
+
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+
+  const handleSubmit = e => {
+    e.preventDefault()
+    setSubmitted(true)
+    setTimeout(() => onClose(), 2200)
+  }
+
+  const inputCls = 'border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none w-full bg-slate-50/50 transition-all'
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative" role="dialog" aria-modal="true" aria-labelledby="contact-title">
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+          aria-label="Close dialog"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="w-4 h-4">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        {submitted ? (
+          /* ── Success state ── */
+          <div className="flex flex-col items-center justify-center py-10 text-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-emerald-600 text-[32px]" style={{ fontVariationSettings: '"FILL" 1' }}>verified</span>
+            </div>
+            <h3 className="text-lg font-bold text-[#0B2545]">Transmission Verified</h3>
+            <p className="text-sm text-slate-600 max-w-xs leading-relaxed">
+              Your inquiry has been routed to the BELTAL technical secretariat. Closing…
+            </p>
+          </div>
+        ) : (
+          /* ── Form ── */
+          <>
+            {/* Header */}
+            <span className="text-[10px] font-bold tracking-widest text-blue-800 bg-blue-50 px-2.5 py-1 rounded uppercase">
+              Defence &amp; Enterprise Inquiry
+            </span>
+            <h2 id="contact-title" className="text-xl font-extrabold text-[#0B2545] mt-3 mb-1" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+              Connect with BELTAL Operations
+            </h2>
+            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+              Inquire about sovereign DID onboarding, air-gapped node integration, or pilot clearances.
+            </p>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              {/* Full Name */}
+              <div>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">Officer / Representative Name</label>
+                <input
+                  type="text" name="name" required placeholder="e.g. Wg Cdr Arjun Sharma"
+                  value={form.name} onChange={handleChange}
+                  className={inputCls}
+                />
+              </div>
+
+              {/* Designation */}
+              <div>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">Official Designation &amp; Department / Agency</label>
+                <input
+                  type="text" name="designation" required placeholder="e.g. Director IT, MoD / DRDO / Enterprise"
+                  value={form.designation} onChange={handleChange}
+                  className={inputCls}
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">Official Email Address</label>
+                <input
+                  type="email" name="email" required placeholder="yourname@gov.in"
+                  value={form.email} onChange={handleChange}
+                  className={inputCls}
+                />
+              </div>
+
+              {/* Inquiry Type */}
+              <div>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">Clearance / Inquiry Type</label>
+                <select
+                  name="inquiryType" required
+                  value={form.inquiryType} onChange={handleChange}
+                  className={inputCls}
+                >
+                  <option value="" disabled>Select inquiry type…</option>
+                  <option>Sovereign Ledger Node Integration</option>
+                  <option>Defense Asset Tokenization</option>
+                  <option>DID Verification Pilot</option>
+                  <option>General Technical Query</option>
+                </select>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">Message / Dispatch Brief</label>
+                <textarea
+                  name="message" rows={4} placeholder="Describe your requirement or operational context…"
+                  value={form.message} onChange={handleChange}
+                  className={inputCls + ' resize-none'}
+                />
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="bg-[#0B2545] hover:bg-blue-900 text-white font-semibold py-2.5 px-6 rounded-lg w-full transition-all shadow-md flex items-center justify-center gap-2 mt-1"
+              >
+                <span className="material-symbols-outlined text-[18px]">send</span>
+                Transmit Inquiry
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────
+   GOVERNMENT BANNER  (code.html lines 46-54)
 ───────────────────────────────────────────────────────── */
 function Header() {
   const navLinks = [
-    { label: 'Platform', path: 'platform', active: true },
-    { label: 'Features', path: 'features' },
-    { label: 'Technology', path: 'technology' },
-    { label: 'Use Cases', path: 'use-cases' },
-    { label: 'About BEL', path: 'about-bel' },
+    { label: 'Platform', href: '#platform' },
+    { label: 'Features', href: '#features' },
+    { label: 'Technology', href: '#technology' },
+    { label: 'Use Cases', href: '#use-cases' },
+    { label: 'About BEL', href: '#about-bel' },
   ]
 
+  const [activeTab, setActiveTab] = useState('#platform')
+  const [indicatorStyle, setIndicatorStyle] = useState({ translateX: 0, width: 0, opacity: 0 })
+  const navigate = useNavigate()
+  const navRefs = useRef({})
+
+  // Recompute sliding indicator position whenever activeTab changes
+  useEffect(() => {
+    const el = navRefs.current[activeTab]
+    if (!el) return
+    // Double-rAF: first frame lets browser finish layout, second reads stable geometry
+    let raf1 = requestAnimationFrame(() => {
+      let raf2 = requestAnimationFrame(() => {
+        setIndicatorStyle({
+          translateX: el.offsetLeft,
+          width: el.offsetWidth,
+          opacity: 1,
+        })
+      })
+      return () => cancelAnimationFrame(raf2)
+    })
+    return () => cancelAnimationFrame(raf1)
+  }, [activeTab])
+
+  // Recompute on resize so indicator never drifts
+  useEffect(() => {
+    const onResize = () => {
+      const el = navRefs.current[activeTab]
+      if (el) setIndicatorStyle({ translateX: el.offsetLeft, width: el.offsetWidth, opacity: 1 })
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [activeTab])
+
+  // IntersectionObserver — auto-update active tab based on visible section
+  useEffect(() => {
+    const sectionIds = navLinks.map(l => l.href.slice(1))
+    const observers = []
+    const ratioMap = {}
+
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id)
+      if (!el) return
+      ratioMap[id] = 0
+
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          ratioMap[id] = entry.intersectionRatio
+          const best = Object.entries(ratioMap).reduce(
+            (a, b) => (b[1] > a[1] ? b : a),
+            ['', 0]
+          )
+          if (best[1] > 0) setActiveTab(`#${best[0]}`)
+        },
+        { threshold: Array.from({ length: 21 }, (_, i) => i * 0.05) }
+      )
+      obs.observe(el)
+      observers.push(obs)
+    })
+
+    return () => observers.forEach(o => o.disconnect())
+  }, [])
+
+  const handleClick = (e, href) => {
+    e.preventDefault()
+    setActiveTab(href)
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   return (
+    <>
     <header className="sticky top-0 w-full z-40 border-b border-surface-container-highest shadow-[0_1px_8px_rgba(13,43,78,0.06)] bg-[#FFFDF5]">
       <div className="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between">
         {/* Brand */}
-        <div className="flex items-center gap-space-md">
-          <img
-            alt="BEL Official Brand Emblem"
-            className="h-8 w-auto object-contain"
-            src="https://lh3.googleusercontent.com/aida/AEtjO1UImd28C_QSqVlHoiQt8MunAS-5DfDyWAGa52B36aRC9-2FCj15bxVnFLMLxeuGJK3cVDbFl5qfXMTqRJWO4H7yStUU6NAoE1_LHkj-xFzDb-Y1qkxB-xPXr4QfXu5Oixh3nnxsgDTgmZD8FY6eH4-3mV8E9jmptZ18JvYLR5tW9mKpyvRlR4AR2jEw8QAyDhQ-Yu8-FUAKb4GoN86MussSzHx2Ad9m8a67WklPKHN6zlhl5VlKZXIkoA"
-          />
-          <div className="h-8 w-px bg-outline-variant" />
-          <div className="flex flex-col">
-            <span className="font-headline-md text-headline-md text-primary-container leading-none tracking-tight">
-              Bharat SecureChain
-            </span>
-            <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest mt-1 font-semibold">
-              Govt of India • BEL Sovereign Ledger
-            </span>
-          </div>
+        <div className="flex items-center">
+          <BELNavBrand />
         </div>
 
         {/* Nav */}
-        <nav className="hidden md:flex items-center gap-space-xl h-full">
-          {navLinks.map(({ label, path, active }) => (
-            <a
-              key={path}
-              href={`#${path}`}
-              className={
-                active
-                  ? 'transition-colors py-space-sm text-secondary border-b-2 border-secondary font-bold'
-                  : 'font-title-md text-title-md text-on-surface-variant hover:text-secondary transition-colors py-space-sm'
-              }
-            >
-              {label}
-            </a>
-          ))}
+        <nav className="hidden md:flex items-center gap-space-xl h-full relative">
+          {navLinks.map(({ label, href }) => {
+            const isActive = activeTab === href
+            return (
+              <a
+                key={href}
+                href={href}
+                ref={el => { navRefs.current[href] = el }}
+                onClick={e => handleClick(e, href)}
+                className={
+                  isActive
+                    ? 'transition-colors duration-200 py-space-sm text-secondary font-bold'
+                    : 'font-title-md text-title-md text-on-surface-variant hover:text-secondary transition-colors duration-200 py-space-sm'
+                }
+              >
+                {label}
+              </a>
+            )
+          })}
+          {/* Sliding underline indicator — GPU-accelerated via transform */}
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: indicatorStyle.width,
+              opacity: indicatorStyle.opacity,
+              height: '2.5px',
+              background: '#1e5fa8',
+              borderRadius: '2px',
+              transform: `translateX(${indicatorStyle.translateX}px)`,
+              willChange: 'transform, width',
+              transition: [
+                'transform 320ms cubic-bezier(0.4, 0, 0.2, 1)',
+                'width 320ms cubic-bezier(0.4, 0, 0.2, 1)',
+                'opacity 180ms ease',
+              ].join(', '),
+              pointerEvents: 'none',
+            }}
+          />
         </nav>
 
         {/* CTA */}
         <div className="flex items-center gap-space-md">
-          <a
-            className="bg-secondary text-on-secondary hover:bg-primary-container font-label-md text-label-md px-space-lg py-space-sm rounded-lg transition-colors flex items-center shadow-sm"
-            href="#contact-us"
+          <button
+            onClick={() => navigate('/contact')}
+            className="bg-secondary text-on-secondary hover:bg-primary-container font-label-md text-label-md px-space-lg py-space-sm rounded-lg transition-colors flex items-center shadow-sm cursor-pointer"
           >
             Contact Us
-          </a>
+          </button>
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
           </div>
         </div>
       </div>
     </header>
+    </>
   )
 }
 
 /* ─────────────────────────────────────────────────────────
    SECTION 1: HERO  (code.html lines 91-375)
 ───────────────────────────────────────────────────────── */
-function HeroSection() {
+/* ─────────────────────────────────────────────────────────
+   PROBLEM STATEMENT MODAL
+───────────────────────────────────────────────────────── */
+const PROBLEM_PAIRS = [
+  {
+    id: 1,
+    title: 'Centralized Identity Vulnerability',
+    problem:
+      'Centralized databases represent single points of failure vulnerable to state-sponsored intrusions and credential leaks.',
+    solution:
+      'W3C Decentralized Identifiers (DIDs) with zero-knowledge cryptographic authentication across defense personnel.',
+  },
+  {
+    id: 2,
+    title: 'Untracked Supply Chain & Counterfeiting',
+    problem:
+      'Mission-critical hardware components and classified asset movements are difficult to audit across disparate legacy registries.',
+    solution:
+      'Non-fungible Asset Provenance (NFTs) that register immutable custody transfers directly on-chain.',
+  },
+  {
+    id: 3,
+    title: 'Authorization Latency & Siloed Approvals',
+    problem:
+      'Manual, paper-bound multi-agency clearance bottlenecks slow tactical deployment during critical operations.',
+    solution:
+      'Self-executing Byzantine Fault Tolerant (BFT) Smart Contracts granting instantaneous, role-based cryptographic clearances.',
+  },
+]
+
+function ProblemModal({ onClose }) {
+  // Close on Escape key
+  useEffect(() => {
+    const handler = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
   return (
-    <section className="w-full bg-gradient-to-b from-[#E8F1FB] to-surface-container-lowest py-24 px-8 border-b border-surface-container-highest">
+    <div
+      className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="problem-modal-title"
+    >
+      <div className="bg-[#F8F3E6] border-2 border-[#C59B27] rounded-2xl max-w-4xl w-full p-6 md:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          aria-label="Close dialog"
+          className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-[#0B2545] hover:bg-amber-100 transition-all"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="w-4 h-4">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        {/* Header */}
+        <div className="mb-6">
+          <span className="text-[10px] font-bold tracking-widest text-[#0B2545] bg-amber-200/60 px-2.5 py-1 rounded uppercase">
+            Defence &amp; Sovereign Ledger Mandate
+          </span>
+          <h2
+            id="problem-modal-title"
+            className="text-2xl md:text-3xl font-bold text-[#0B2545] mt-3 leading-snug"
+            style={{ fontFamily: '"Times New Roman", Times, serif' }}
+          >
+            Sovereign Problem Statements &amp; BELTAL Solutions
+          </h2>
+          <div className="mt-2 h-0.5 w-20 rounded bg-[#C59B27]" />
+        </div>
+
+        {/* 3 paired cards */}
+        <div className="flex flex-col gap-5">
+          {PROBLEM_PAIRS.map(({ id, title, problem, solution }) => (
+            <div
+              key={id}
+              className="bg-white rounded-xl border border-amber-200/60 shadow-sm overflow-hidden"
+            >
+              {/* Card header */}
+              <div className="bg-[#0D2B4E] px-5 py-3 flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#C8A74C]/20 border border-[#C8A74C]/40 flex items-center justify-center shrink-0">
+                  <span className="text-[11px] font-black text-[#C8A74C]">{String(id).padStart(2, '0')}</span>
+                </span>
+                <h3 className="text-[13px] font-bold text-white tracking-wide">{title}</h3>
+              </div>
+
+              {/* Problem / Solution row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                {/* Problem */}
+                <div className="p-4 flex gap-3 items-start">
+                  <div className="mt-0.5 shrink-0 w-7 h-7 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-red-500 text-[15px]">warning</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold tracking-widest text-red-600 uppercase mb-1">Problem</p>
+                    <p className="text-[13px] text-slate-700 leading-relaxed">{problem}</p>
+                  </div>
+                </div>
+
+                {/* Solution */}
+                <div className="p-4 flex gap-3 items-start bg-[#F0F8FF]/50">
+                  <div className="mt-0.5 shrink-0 w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[#1E5FA8] text-[15px]" style={{ fontVariationSettings: '"FILL" 1' }}>shield</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold tracking-widest text-[#1E5FA8] uppercase mb-1">BELTAL Solution</p>
+                    <p className="text-[13px] text-slate-700 leading-relaxed">{solution}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={onClose}
+            className="bg-[#0B2545] hover:bg-[#163761] text-white px-8 py-2.5 rounded-xl font-bold text-[14px] transition-all shadow-md flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[16px]">check_circle</span>
+            Understood &amp; Return to Platform
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HeroSection() {
+  const [isProblemModalOpen, setIsProblemModalOpen] = useState(false)
+
+  return (
+    <>
+    <section id="platform" className="w-full bg-gradient-to-b from-[#E8F1FB] to-surface-container-lowest py-24 px-8 border-b border-surface-container-highest">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 items-center gap-12">
 
         {/* LEFT: 7 cols */}
@@ -147,7 +574,7 @@ function HeroSection() {
             ].map(({ icon, fill, label }) => (
               <div
                 key={label}
-                className="bg-[#FFFDF5] border border-tertiary-container/40 py-3 px-5 rounded-lg shadow-sm flex items-center gap-3 flex-1 min-w-[150px]"
+                className="bg-[#FFFDF8] border border-amber-200/40 py-3 px-5 rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3 flex-1 min-w-[150px]"
               >
                 <div className="w-8 h-8 rounded bg-[#E8F1FB] flex items-center justify-center text-secondary shrink-0">
                   <span
@@ -173,12 +600,12 @@ function HeroSection() {
               <span>Explore Platform</span>
               <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
             </a>
-            <a
-              className="bg-surface-container-lowest border-2 border-secondary text-secondary hover:bg-[#E8F1FB] font-headline-sm text-[18px] font-bold px-8 py-4 rounded-xl inline-flex items-center gap-2 transition-all shadow-xs"
-              href="#problem-statement"
+            <button
+              className="bg-surface-container-lowest border-2 border-secondary text-secondary hover:bg-[#E8F1FB] font-headline-sm text-[18px] font-bold px-8 py-4 rounded-xl inline-flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+              onClick={() => setIsProblemModalOpen(true)}
             >
               <span>View Problem Statement</span>
-            </a>
+            </button>
           </div>
 
           {/* Trust line */}
@@ -377,6 +804,10 @@ function HeroSection() {
 
       </div>
     </section>
+
+    {/* Problem Statement Modal */}
+    {isProblemModalOpen && <ProblemModal onClose={() => setIsProblemModalOpen(false)} />}
+    </>
   )
 }
 
@@ -384,33 +815,53 @@ function HeroSection() {
    SECTION 2: TRUST STRIP  (code.html lines 377-413)
 ───────────────────────────────────────────────────────── */
 function TrustSection() {
-  const logos = ['BEL', 'DRDO', 'NIC', 'MeitY', 'Digital India']
+  const partners = [
+    { name: 'BEL', sub: 'Defence Electronics' },
+    { name: 'DRDO', sub: 'R&D Ecosystem' },
+    { name: 'NIC', sub: 'National Informatics' },
+    { name: 'MeitY', sub: 'Electronics & IT' },
+    { name: 'Digital India', sub: 'Sovereign Infra' },
+  ]
+
   return (
-    <section className="w-full py-12 px-8 border-t border-[#E2E8F0] bg-[#E8F1FB]">
-      <div className="max-w-7xl mx-auto flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
-          <span className="font-label-sm text-label-sm text-outline font-bold uppercase tracking-widest">
-            TRUSTED BY DEFENCE &amp; GOVERNMENT SECTORS
+    <section className="w-full border-t border-[#E2E8F0] bg-[#E8F1FB]">
+      <div className="max-w-7xl mx-auto py-6 px-4 md:px-8">
+
+        {/* Section header row */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <span className="text-xs md:text-sm font-bold tracking-widest text-[#0B2545] uppercase">
+            Trusted by Defence &amp; Government Sectors
           </span>
-          <span className="font-label-md text-label-md font-semibold text-secondary flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">gavel</span>
-            <span>Aligned with Ministry of Defence &amp; Digital India Guidelines</span>
+
+          {/* Compliance badge pill */}
+          <span className="inline-flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 px-3 py-1.5 rounded-full text-blue-900 text-xs font-semibold whitespace-nowrap">
+            <span className="material-symbols-outlined text-[14px] text-blue-700">gavel</span>
+            Aligned with Ministry of Defence &amp; Digital India Guidelines
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {logos.map((name, i) => (
+
+        {/* Partner cards */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mt-4">
+          {partners.map(({ name, sub }) => (
             <div
               key={name}
-              className={`${i === 4 ? 'col-span-2 sm:col-span-1' : ''} bg-surface-container-lowest border border-[#E2E8F0] rounded-lg py-3 px-6 h-12 flex items-center justify-center font-title-md text-title-md font-bold text-on-surface-variant shadow-xs hover:border-secondary transition-colors cursor-default`}
+              className="bg-white border border-slate-200/70 rounded-xl p-3.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-blue-300 transition-all duration-200 flex flex-col items-center justify-center text-center cursor-default"
             >
-              {name}
+              <span className="font-extrabold text-[#0B2545] text-base tracking-wide leading-tight">
+                {name}
+              </span>
+              <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                {sub}
+              </span>
             </div>
           ))}
         </div>
+
       </div>
     </section>
   )
 }
+
 
 /* ─────────────────────────────────────────────────────────
    SECTION 3: FEATURES  (code.html lines 415-498)
@@ -454,7 +905,7 @@ function FeaturesSection() {
           {cards.map(({ icon, title, desc, tag }) => (
             <div
               key={title}
-              className="bg-surface-container-lowest border border-[#E2E8F0] p-8 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:border-secondary transition-all flex flex-col relative group"
+              className="bg-white border border-slate-200/80 p-8 rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative group"
             >
               <div className="w-12 h-12 rounded-lg bg-[#E8F1FB] flex items-center justify-center text-secondary mb-6 group-hover:scale-105 transition-transform">
                 <span className="material-symbols-outlined text-[32px]">{icon}</span>
@@ -473,68 +924,229 @@ function FeaturesSection() {
   )
 }
 
-/* ─────────────────────────────────────────────────────────
-   SECTION 4: HOW IT WORKS  (code.html lines 500-598)
-───────────────────────────────────────────────────────── */
 function HowItWorksSection() {
   const steps = [
-    { num: '01', title: 'User Registration', desc: 'Decentralized ID creation with cryptographic verification' },
-    { num: '02', title: 'Identity Verification', desc: 'Multi-layer authentication using blockchain proofs' },
-    { num: '03', title: 'Asset Minting', desc: 'Digital assets converted to NFTs on blockchain' },
-    { num: '04', title: 'Smart Governance', desc: 'Automated access control via smart contracts' },
+    {
+      num: '01',
+      title: 'User Registration',
+      desc: 'Decentralized ID creation with cryptographic biometric verification',
+      icon: (
+        /* UserPlus */
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
+        </svg>
+      ),
+      iconColor: 'text-blue-600',
+      ringColor: 'ring-blue-100',
+    },
+    {
+      num: '02',
+      title: 'Identity Verification',
+      desc: 'Multi-layer zero-trust authentication using blockchain proofs and HSM signatures',
+      icon: (
+        /* ShieldCheck */
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" />
+        </svg>
+      ),
+      iconColor: 'text-blue-600',
+      ringColor: 'ring-blue-100',
+    },
+    {
+      num: '03',
+      title: 'Asset Minting',
+      desc: 'Digital assets tokenized as immutable NFTs on the sovereign blockchain ledger',
+      icon: (
+        /* Coins */
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18" /><path d="M7 6h1v4" /><path d="m16.71 13.88.7.71-2.82 2.82" />
+        </svg>
+      ),
+      iconColor: 'text-amber-600',
+      ringColor: 'ring-amber-100',
+    },
+    {
+      num: '04',
+      title: 'Smart Governance',
+      desc: 'Automated access control and audit trails enforced by post-quantum smart contracts',
+      icon: (
+        /* Cpu */
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" />
+        </svg>
+      ),
+      iconColor: 'text-emerald-600',
+      ringColor: 'ring-emerald-100',
+    },
   ]
 
   return (
-    <section className="w-full bg-[#E8F1FB] py-24 px-8 border-t border-[#E2E8F0]">
-      <div className="max-w-7xl mx-auto text-center flex flex-col items-center">
-        <h2 className="font-headline-lg text-headline-lg font-bold text-primary-container mb-14 tracking-tight">
+    <section id="technology" className="w-full bg-[#E8F1FB] py-20 px-8 border-t border-[#E2E8F0]">
+      <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
+
+        {/* Top pill badge */}
+        <div className="inline-flex items-center gap-2 bg-[#0F284E] text-white text-[11px] font-bold px-4 py-1.5 rounded-full tracking-widest uppercase mb-5 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+          Sovereign Workflow Pipeline
+        </div>
+
+        {/* Heading */}
+        <h2 className="font-headline-lg text-headline-lg font-bold text-primary-container tracking-tight mb-3">
           How SecureChain Works
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 items-start text-center relative w-full">
-          {steps.map(({ num, title, desc }) => (
-            <div key={num} className="flex flex-col items-center relative z-10">
-              <div className="w-12 h-12 rounded-full bg-secondary text-on-secondary font-headline-sm text-headline-sm font-bold flex items-center justify-center mb-4 shadow-sm border-2 border-surface-container-lowest">
-                {num}
+
+        {/* Sub-heading */}
+        <p className="text-sm text-slate-500 font-medium max-w-xl mb-14 leading-relaxed">
+          An automated zero-trust protocol — from biometric verification to cryptographic ledger issuance.
+        </p>
+
+        {/* Steps grid with connector line */}
+        <div className="relative w-full">
+
+          {/* Dashed horizontal connector (desktop only) */}
+          <div
+            aria-hidden="true"
+            className="hidden md:block absolute top-[28px] left-[12.5%] right-[12.5%] border-t-2 border-dashed border-blue-200 z-0"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
+            {steps.map(({ num, title, desc, icon, iconColor, ringColor }) => (
+              <div
+                key={num}
+                className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center relative"
+              >
+                {/* Step number pill */}
+                <div className={`ring-4 ${ringColor} bg-[#0F284E] text-white font-bold text-sm w-10 h-10 rounded-full flex items-center justify-center shadow-sm mb-4 shrink-0`}>
+                  {num}
+                </div>
+
+                {/* Micro icon */}
+                <div className={`${iconColor} mb-3`}>
+                  {icon}
+                </div>
+
+                {/* Title */}
+                <h3 className="text-base font-bold text-[#0B2545] mb-2 leading-snug">
+                  {title}
+                </h3>
+
+                {/* Description */}
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  {desc}
+                </p>
               </div>
-              <h3 className="font-headline-sm text-headline-sm font-bold text-primary-container mb-2">{title}</h3>
-              <p className="font-body-md text-body-md text-on-surface-variant">{desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
       </div>
     </section>
   )
 }
 
+
 /* ─────────────────────────────────────────────────────────
    SECTION 5: PROBLEM STATEMENT  (code.html lines 600-651)
 ───────────────────────────────────────────────────────── */
 function ProblemSection() {
-  const points = [
-    'Centralized identity systems vulnerable to cyber attacks and single points of failure',
-    'Digital asset ownership difficult to verify and track across disconnected systems',
-    'Growing need for decentralized, tamper-proof identity and ownership management',
+  const challenges = [
+    {
+      title: 'Siloed & Centralized Identity',
+      desc: 'Single points of failure vulnerable to state-sponsored cyber incursions and credential spoofing.',
+    },
+    {
+      title: 'Unverified Asset Provenance',
+      desc: 'Defence inventory & sensitive documentation prone to forgery across legacy, disconnected channels.',
+    },
+    {
+      title: 'Latency in Inter-Agency Trust',
+      desc: 'Slow, paper-bound authorization chains lacking cryptographic speed and tamper-proof audit trails.',
+    },
+  ]
+
+  const solutions = [
+    {
+      title: 'W3C Decentralized Identifiers (DIDs)',
+      desc: 'Self-sovereign, tamper-proof biometric identity verification — zero reliance on centralized authorities.',
+    },
+    {
+      title: 'Cryptographic NFT Asset Ledgers',
+      desc: 'Real-time, immutable tracking of defence equipment & security clearances on the sovereign blockchain.',
+    },
+    {
+      title: 'BFT Smart Contract Governance',
+      desc: 'Zero-trust automated execution with air-gapped Byzantine Fault Tolerant consensus and full audit logs.',
+    },
   ]
 
   return (
-    <section className="w-full bg-surface-container-lowest py-20 px-8" id="problem-statement">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-[#FFFDF5] border-2 border-tertiary-container/40 border-l-4 border-l-secondary p-12 sm:p-14 rounded-2xl shadow-lg">
-          <span className="font-label-md text-[14px] font-bold text-secondary uppercase tracking-wider block mb-4">
-            PROBLEM STATEMENT
+    <section id="use-cases" className="w-full bg-surface-container-lowest py-20 px-8" data-problem-anchor>
+      <div id="problem-statement" style={{ position: 'relative', top: '-80px', visibility: 'hidden', pointerEvents: 'none' }} aria-hidden="true" />
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-[#FFFDF8] border border-amber-200/50 border-l-4 border-l-blue-600 rounded-2xl p-8 md:p-10 shadow-lg relative overflow-hidden">
+
+          {/* Decorative background glow */}
+          <div aria-hidden="true" className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-blue-50 opacity-50 blur-3xl pointer-events-none" />
+
+          {/* Header */}
+          <span className="text-xs font-bold tracking-widest text-blue-900 uppercase">
+            Problem &amp; Sovereign Resolution
           </span>
-          <h3 className="font-headline-lg text-[32px] leading-tight font-bold text-primary-container mb-8">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-[#0B2545] mt-1 mb-8">
             The Challenge We Solve
-          </h3>
-          <div className="flex flex-col gap-6">
-            {points.map((text) => (
-              <div key={text} className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-[#E8F1FB] flex items-center justify-center text-secondary shrink-0 mt-0.5 shadow-xs">
-                  <span className="material-symbols-outlined text-[20px] font-bold">check</span>
-                </div>
-                <p className="font-body-lg text-[18px] text-on-surface-variant font-medium leading-relaxed">{text}</p>
+          </h2>
+
+          {/* 2-Column grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+
+            {/* ── Column 1: Challenges ── */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="material-symbols-outlined text-red-500 text-[18px]">warning</span>
+                <span className="text-xs font-bold tracking-widest text-red-700 uppercase">
+                  Critical Infrastructure Bottlenecks
+                </span>
               </div>
-            ))}
+              {challenges.map(({ title, desc }) => (
+                <div
+                  key={title}
+                  className="bg-red-50/60 border border-red-100 rounded-xl p-4 flex items-start gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <div className="mt-0.5 shrink-0 w-7 h-7 rounded-full bg-red-100 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-red-500 text-[15px]">report</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-[#0B2545] mb-0.5">{title}</p>
+                    <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Column 2: Solutions ── */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="material-symbols-outlined text-blue-600 text-[18px]" style={{ fontVariationSettings: '"FILL" 1' }}>verified_user</span>
+                <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">
+                  The BELTAL Sovereign Answer
+                </span>
+              </div>
+              {solutions.map(({ title, desc }) => (
+                <div
+                  key={title}
+                  className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 flex items-start gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <div className="mt-0.5 shrink-0 w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-blue-600 text-[15px]" style={{ fontVariationSettings: '"FILL" 1' }}>shield</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-[#0B2545] mb-0.5">{title}</p>
+                    <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
         </div>
       </div>
@@ -575,21 +1187,34 @@ function InnerFooter() {
   ]
 
   return (
-    <section className="w-full bg-primary-container py-16 px-8 border-t-2 border-tertiary-container">
+    <section id="about-bel" className="w-full bg-primary-container py-16 px-8 border-t-2 border-tertiary-container">
       <div className="max-w-7xl mx-auto flex flex-col">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {cols.map(({ heading, links }) => (
-            <div key={heading} className="flex flex-col">
-              <h4 className="font-title-md text-title-md font-bold text-on-primary mb-4">{heading}</h4>
-              <div className="space-y-2">
-                {links.map(({ label, href }) => (
-                  <a key={label} className="font-body-md text-body-md text-[#A8C8E8] hover:text-on-primary block transition-colors" href={href}>
-                    {label}
-                  </a>
-                ))}
-              </div>
+        {/* BEL logo + columns grid */}
+        <div className="flex flex-col md:flex-row gap-10 mb-12">
+          {/* Square badge */}
+          <div className="flex flex-col items-start gap-3 shrink-0">
+            <BELFooterBadge />
+            <div className="flex flex-col" style={{ maxWidth: '140px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', lineHeight: 1.2 }}>Bharat Electronics Limited</span>
+              <span style={{ fontSize: '10px', color: '#7ab0fe', marginTop: '3px' }}>A Navratna Company</span>
             </div>
-          ))}
+          </div>
+
+          {/* Nav columns */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-1">
+            {cols.map(({ heading, links }) => (
+              <div key={heading} className="flex flex-col">
+                <h4 className="font-title-md text-title-md font-bold text-on-primary mb-4">{heading}</h4>
+                <div className="space-y-2">
+                  {links.map(({ label, href }) => (
+                    <a key={label} className="font-body-md text-body-md text-[#A8C8E8] hover:text-on-primary block transition-colors" href={href}>
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="pt-8 border-t border-white/10 text-center">
           <p className="font-code-sm text-code-sm text-on-primary-container">
@@ -634,7 +1259,7 @@ export default function LandingPage() {
       <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} />
 
       <GovBanner />
-      <Header />
+      <SiteHeader mode="home" />
 
       <main className="w-full max-w-7xl mx-auto px-margin py-space-lg bg-surface min-h-[calc(100vh-116px)]">
         <div className="flex flex-col w-full">

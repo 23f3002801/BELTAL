@@ -79,20 +79,20 @@
   --spacing-margin:          2rem;
   --spacing-margin-desktop:  3rem;
 
-  /* ── Font families ── */
-  --font-family-display-hero:        "Public Sans", sans-serif;
-  --font-family-display-hero-mobile: "Public Sans", sans-serif;
-  --font-family-headline-lg:         "Public Sans", sans-serif;
-  --font-family-headline-lg-mobile:  "Public Sans", sans-serif;
-  --font-family-headline-md:         "Public Sans", sans-serif;
-  --font-family-headline-sm:         "Public Sans", sans-serif;
-  --font-family-title-md:            "Public Sans", sans-serif;
-  --font-family-body-lg:             "Inter", sans-serif;
-  --font-family-body-md:             "Inter", sans-serif;
-  --font-family-body-sm:             "Inter", sans-serif;
-  --font-family-label-md:            "Inter", sans-serif;
-  --font-family-label-sm:            "Inter", sans-serif;
-  --font-family-code-sm:             "Inter", sans-serif;
+  /* ── Font families — all overridden to Times New Roman ── */
+  --font-family-display-hero:        "Times New Roman", Times, serif;
+  --font-family-display-hero-mobile: "Times New Roman", Times, serif;
+  --font-family-headline-lg:         "Times New Roman", Times, serif;
+  --font-family-headline-lg-mobile:  "Times New Roman", Times, serif;
+  --font-family-headline-md:         "Times New Roman", Times, serif;
+  --font-family-headline-sm:         "Times New Roman", Times, serif;
+  --font-family-title-md:            "Times New Roman", Times, serif;
+  --font-family-body-lg:             "Times New Roman", Times, serif;
+  --font-family-body-md:             "Times New Roman", Times, serif;
+  --font-family-body-sm:             "Times New Roman", Times, serif;
+  --font-family-label-md:            "Times New Roman", Times, serif;
+  --font-family-label-sm:            "Times New Roman", Times, serif;
+  --font-family-code-sm:             "Times New Roman", Times, serif;
 
   /* ── Font sizes (with line-height & weight) ── */
   --font-size-display-hero:        48px;
@@ -117,9 +117,11 @@
   html, body {
     margin: 0;
     padding: 0;
+    scroll-behavior: smooth;
   }
   body {
     overscroll-behavior: none;
+    font-family: "Times New Roman", Times, serif;
   }
   main > :first-child {
     margin-top: 0 !important;
@@ -170,4 +172,21 @@
   .text-label-md            { font-size: 13px; line-height: 18px; font-weight: 600; }
   .text-label-sm            { font-size: 11px; line-height: 16px; font-weight: 700; }
   .text-code-sm             { font-size: 12px; line-height: 16px; font-weight: 500; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   Force Times New Roman globally — beats Tailwind v4 preflight
+   and all utility-layer font-family overrides.
+   Excludes material-symbols-outlined so icons still render.
+───────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+html, body {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined" !important;
 }
