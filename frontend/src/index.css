@@ -190,3 +190,95 @@ html, body {
 .material-symbols-outlined {
   font-family: "Material Symbols Outlined" !important;
 }
+
+/* Light-blue dashboard with a restrained sovereign-gold accent palette. */
+.dashboard-theme {
+  color: #163b5c !important;
+  background: #eaf7ff !important;
+}
+
+.dashboard-theme main {
+  background: linear-gradient(135deg, #effaff 0%, #dff2ff 58%, #fff8d9 140%) !important;
+}
+
+.dashboard-theme aside,
+.dashboard-theme header {
+  background: #e8f5ff !important;
+  border-color: #b9dcef !important;
+}
+
+.dashboard-theme aside *:not(.material-symbols-outlined),
+.dashboard-theme header *:not(.material-symbols-outlined) {
+  color: #173c5d;
+}
+
+.dashboard-theme .dashboard-card {
+  background: #fbfeff !important;
+  border-color: #b6d8ee !important;
+  box-shadow: 0 8px 22px rgba(61, 126, 170, 0.12) !important;
+}
+
+.dashboard-theme .dashboard-card h3,
+.dashboard-theme .dashboard-card p {
+  color: #173c5d !important;
+}
+
+.dashboard-theme .dashboard-card p.text-\[32px\] {
+  color: #114f7d !important;
+}
+
+.dashboard-theme main h1,
+.dashboard-theme main h2 {
+  color: #123b5d !important;
+}
+
+.dashboard-theme main > div > div > p,
+.dashboard-theme .dashboard-ledger p {
+  color: #52718a !important;
+}
+
+.dashboard-theme .dashboard-ledger input,
+.dashboard-theme .dashboard-ledger select {
+  background: #ffffff !important;
+  border-color: #b6d8ee !important;
+  color: #173c5d !important;
+}
+
+.dashboard-theme .dashboard-table {
+  background: #ffffff !important;
+  border-color: #b6d8ee !important;
+}
+
+.dashboard-theme .dashboard-table thead tr {
+  background: #d9efff !important;
+  border-color: #b6d8ee !important;
+}
+
+.dashboard-theme .dashboard-table th {
+  color: #175887 !important;
+}
+
+.dashboard-theme .dashboard-table tbody tr,
+.dashboard-theme .dashboard-table tbody tr:nth-child(even) {
+  background: #fafdff !important;
+  border-color: #d2e7f5 !important;
+}
+
+.dashboard-theme .dashboard-table td,
+.dashboard-theme .dashboard-table tbody {
+  color: #244b6b !important;
+}
+
+/* Stronger contrast for gold labels and green status text on the light theme. */
+.dashboard-theme .text-\[\#D4AF37\],
+.dashboard-theme .text-\[\#D4AF37\]\/60,
+.dashboard-theme .text-\[\#D4AF37\]\/80,
+.dashboard-theme .text-amber-300 {
+  color: #8a6500 !important;
+}
+
+.dashboard-theme .text-emerald-300,
+.dashboard-theme .text-emerald-400,
+.dashboard-theme .text-emerald-400\/80 {
+  color: #126747 !important;
+}
