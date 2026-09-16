@@ -11,7 +11,7 @@
  * onClose  : () => void — called when modal is dismissed
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { shortenAddress } from '../../context/AuthContext';
 
@@ -176,6 +176,7 @@ function StepIndicator({ connectStep }) {
 export default function LoginModal({ isOpen, onClose }) {
   const { connectWallet, connectStep, connectError, resetConnect, user, isAuthenticated } =
     useAuth();
+  const [portalPreference, setPortalPreference] = useState('USER');
 
   /* Auto-close after successful auth */
   useEffect(() => {
@@ -339,6 +340,23 @@ export default function LoginModal({ isOpen, onClose }) {
               <div>
                 {/* Step indicators — all unlit */}
                 <StepIndicator connectStep="idle" />
+
+                <fieldset className="mb-5">
+                  <legend className="mb-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Open preferred portal</legend>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['USER', 'MANAGER', 'AUDITOR', 'ADMIN'].map((role) => (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => setPortalPreference(role)}
+                        className={`rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-colors ${portalPreference === role ? 'border-[#1E5FA8] bg-[#1E5FA8]/20 text-[#7ab0fe]' : 'border-[#1E2E48] bg-[#060D1A] text-slate-400 hover:border-slate-500'}`}
+                      >
+                        {role}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[10px] leading-relaxed text-slate-500">This is only a portal preference. Your role assigned in the database is verified by the server and controls access.</p>
+                </fieldset>
 
                 {/* Info card */}
                 <div className="bg-[#060D1A] border border-[#1E2E48] rounded-xl p-4 mb-5">

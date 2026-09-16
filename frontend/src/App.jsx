@@ -33,6 +33,8 @@ import UserDashboard from "./pages/user/UserDashboard";
 import MyAssets from "./pages/user/MyAssets";
 import AssetDetail from "./pages/user/AssetDetail";
 import RequestTransferForm from "./pages/user/RequestTransferForm";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 /**
@@ -81,6 +83,7 @@ export default function App() {
         <BrowserRouter>
           <ToastProvider>
             <TransactionProvider>
+              <ScrollToHashSection />
               <Routes>
                 {/* ── Public Routes ── */}
                 <Route path="/" element={<LandingPage />} />
@@ -90,6 +93,9 @@ export default function App() {
                 {/* ── Protected Area wrapped in BaseLayout ── */}
                 <Route element={<ProtectedRoute allowedRoles={["ADMIN", "MANAGER", "AUDITOR", "USER"]} />}>
                   <Route element={<BaseLayout />}>
+
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
 
                     {/* UI Kit — any authenticated role */}
                     <Route path="/ui-kit" element={<UIKitPage />} />
@@ -134,7 +140,6 @@ export default function App() {
                       <Route path="/my-assets" element={<MyAssets />} />
                       <Route path="/user/assets/:id" element={<AssetDetail />} />
                       <Route path="/transfer/request" element={<RequestTransferForm />} />
-                      <Route path="/profile" element={<div className="p-8 text-slate-200">My Profile — Coming Soon</div>} />
                     </Route>
 
                   </Route>
@@ -151,25 +156,5 @@ export default function App() {
         </BrowserRouter>
       </AuthProvider>
     </ErrorBoundary>
-    <AuthProvider>
-      <BrowserRouter>
-        <ScrollToHashSection />
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          
-          {/* Protected Area wrapped in BaseLayout */}
-          <Route element={<ProtectedRoute allowedRoles={["admin", "manager", "auditor", "user"]} />}>
-            <Route element={<BaseLayout />}>
-              <Route path="/dashboard" element={<div className="p-8 text-slate-200">Secure Dashboard Area</div>} />
-            </Route>
-          </Route>
-          
-          {/* Fallback */}
-          <Route path="*" element={<LandingPage />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
   );
 }

@@ -5,6 +5,7 @@ import Card, { CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 export default function AuditTrailExplorer() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [total, setTotal] = useState(0);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [pagination, setPagination] = useState({ page: 1, limit: 20 });
@@ -23,6 +24,7 @@ export default function AuditTrailExplorer() {
 
     const fetchEvents = async () => {
         setLoading(true);
+        setError(null);
         try {
             const params = {
                 ...filters,
@@ -35,11 +37,19 @@ export default function AuditTrailExplorer() {
             });
 
             const data = await auditApi.list(params);
-            setEvents(data.events || data || []);
-            setTotal(data.total || 0);
+            const auditEvents = Array.isArray(data?.events) ? data.events : [];
+            // The API returns `type`, `actor`, and `targetId`; normalize them
+            // once for the existing explorer presentation.
+            setEvents(auditEvents.map((event) => ({
+                ...event,
+                actionType: event.type ?? event.actionType,
+                performedBy: event.actor ?? event.performedBy,
+                entityId: event.targetId ?? event.entityId,
+            })));
+            setTotal(data?.pagination?.total ?? data?.total ?? 0);
         } catch (err) {
             console.error("Failed to fetch audit events", err);
-            alert("Failed to load audit trail");
+            setError(err?.uiMessage || 'The audit service could not be reached. Check that the backend is running and has been restarted after database configuration changes.');
         } finally {
             setLoading(false);
         }
@@ -198,6 +208,16 @@ export default function AuditTrailExplorer() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
+                    {error && (
+                        <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-800/50 bg-red-950/20 p-4 text-sm text-red-200">
+                            <span className="material-symbols-outlined text-red-400">error</span>
+                            <div>
+                                <p className="font-bold">Unable to load the audit trail</p>
+                                <p className="mt-1 text-xs text-red-300/80">{error}</p>
+                                <button onClick={fetchEvents} className="mt-3 text-xs font-bold text-red-200 underline hover:text-white">Retry</button>
+                            </div>
+                        </div>
+                    )}
                     {loading ? (
                         <p className="text-slate-400 text-center py-8">Loading audit trail...</p>
                     ) : (

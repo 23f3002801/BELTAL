@@ -12,6 +12,12 @@ export default function BaseLayout() {
     localStorage.setItem('beltal-theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    const updateTheme = (event) => setTheme(event.detail === 'light' ? 'light' : 'dark');
+    window.addEventListener('beltal:theme-change', updateTheme);
+    return () => window.removeEventListener('beltal:theme-change', updateTheme);
+  }, []);
+
   return (
     <div className={`dashboard-theme ${theme === 'light' ? 'light-theme' : 'dark-theme'} min-h-screen bg-[#060D1A] flex`}>
       {/* Mobile sidebar overlay */}
