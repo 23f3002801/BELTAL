@@ -4,9 +4,9 @@ import { requireRole } from '../middleware/rbac.middleware.js';
 import validate from '../middleware/validate.js';
 import transferController from '../controllers/transfer.controller.js';
 import {
-    createTransferRequestSchema,
-    listTransfersQuerySchema,
-    rejectTransferSchema,
+  createTransferRequestSchema,
+  listTransfersQuerySchema,
+  rejectTransferSchema,
 } from '../validators/transfer.validator.js';
 
 const router = express.Router();
@@ -16,20 +16,20 @@ const router = express.Router();
  * Available to authenticated users holding the asset, or Admin/Manager
  */
 router.post(
-    '/request',
-    authenticate,
-    validate(createTransferRequestSchema),
-    transferController.requestTransfer
+  '/request',
+  authenticate,
+  validate(createTransferRequestSchema),
+  transferController.requestTransfer
 );
 
 /**
  * List transfer requests with query filtering
  */
 router.get(
-    '/',
-    authenticate,
-    validate(listTransfersQuerySchema, 'query'),
-    transferController.listTransfers
+  '/',
+  authenticate,
+  validate(listTransfersQuerySchema, 'query'),
+  transferController.listTransfers
 );
 
 /**
@@ -37,10 +37,10 @@ router.get(
  * Restricted to ADMIN and MANAGER
  */
 router.post(
-    '/:id/approve',
-    authenticate,
-    requireRole('ADMIN', 'MANAGER'),
-    transferController.approveTransfer
+  '/:id/approve',
+  authenticate,
+  requireRole('ADMIN', 'MANAGER'),
+  transferController.approveTransfer
 );
 
 /**
@@ -48,10 +48,10 @@ router.post(
  * Accessible to ADMIN, MANAGER, or original custodian
  */
 router.post(
-    '/:id/reject',
-    authenticate,
-    validate(rejectTransferSchema),
-    transferController.rejectTransfer
+  '/:id/reject',
+  authenticate,
+  validate(rejectTransferSchema),
+  transferController.rejectTransfer
 );
 
 export default router;

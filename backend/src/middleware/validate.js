@@ -10,7 +10,15 @@ const validate = (schema, source = 'body') => (req, res, next) => {
     return next(new ApiError(400, message));
   }
 
-  req[source] = result.data;
+  try {
+    req[source] = result.data;
+  } catch {
+    Object.defineProperty(req, source, {
+      value: result.data,
+      writable: true,
+      configurable: true,
+    });
+  }
   next();
 };
 

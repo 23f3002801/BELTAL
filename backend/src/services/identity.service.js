@@ -57,7 +57,10 @@ export const identityService = {
 
     const chainResult = await chainService.registerIdentityOnChain({
       walletAddress: checksumAddress,
+      did: `did:beltal:${input.externalId || checksumAddress.slice(2, 10)}`,
       identityHash,
+      clearanceLevel: input.clearanceLevel,
+      sbu: input.sbu,
     });
     if (!chainResult.confirmed) {
       logger.warn(`Identity for ${checksumAddress} will be created off-chain only pending contract integration.`);
