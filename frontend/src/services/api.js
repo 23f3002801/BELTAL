@@ -46,9 +46,11 @@ api.interceptors.response.use(
     }
 
     // Normalise error message for UI consumption
+    const responseData = error.response?.data;
     const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
+      responseData?.message ||
+      responseData?.error?.message ||
+      (typeof responseData?.error === 'string' ? responseData.error : null) ||
       error.message ||
       'An unexpected error occurred';
 
@@ -127,6 +129,14 @@ export const assetApi = {
   mint: (payload) => api.post('/assets', payload).then((r) => r.data.data),
   /** GET /assets — administrator asset ledger. */
   list: (params = {}) => api.get('/assets', { params }).then((r) => r.data.data),
+  /** GET /assets/me — assets owned by the authenticated user. */
+  listMine: () => api.get('/assets/me').then((r) => r.data.data),
+};
+
+export const userApi = {
+  /** GET /users/transfer-recipients — identities eligible to receive an asset. */
+  listTransferRecipients: (params = {}) =>
+    api.get('/users/transfer-recipients', { params }).then((r) => r.data.data),
 };
 
 /* ── Transfer-specific typed helpers ────────────────── */
@@ -135,13 +145,24 @@ export const transferApi = {
   list: (params = {}) => api.get('/transfers', { params }).then((r) => r.data.data),
 
   /** POST /transfers - create a new transfer request */
-  create: (payload) => api.post('/transfers', payload).then((r) => r.data.data),
+  create: (payload) => api.post('/transfers/request', payload).then((r) => r.data.data),
 
   /** PATCH /transfers/:id/approve - approve a transfer request */
   approve: (id) => api.patch(`/transfers/${id}/approve`).then((r) => r.data.data),
 
   /** PATCH /transfers/:id/reject - reject a transfer request */
-  reject: (id) => api.patch(`/transfers/${id}/reject`).then((r) => r.data.data),
+  reject: (id, payload = {}) => api.patch(`/transfers/${id}/reject`, payload).then((r) => r.data.data),
+};
+/* ── Auditor-specific typed helpers ──────────────────── */
+export const auditApi = {
+  /** GET /audit - list audit events with filters */
+  list: (params = {}) => api.get('/audit', { params }).then((r) => r.data.data),
+
+  /** GET /audit/stats - get counts by action type */
+  getStats: (params = {}) => api.get('/audit/stats', { params }).then((r) => r.data.data),
+
+  /** GET /audit/verify/:id - verify record on-chain */
+  verify: (id) => api.get(`/audit/verify/${id}`).then((r) => r.data.data),
 };
 
 export default api;

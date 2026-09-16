@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext'
  * Topbar — Active network status + Officer profile menu
  */
 
-export default function Topbar({ onMenuToggle, sidebarCollapsed }) {
+export default function Topbar({ onMenuToggle, sidebarCollapsed, theme, onThemeToggle }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [profileOpen, setProfileOpen] = useState(false)
@@ -58,7 +58,20 @@ export default function Topbar({ onMenuToggle, sidebarCollapsed }) {
       </div>
 
       {/* ── Right: Profile dropdown ──────────────────────── */}
-      <div className="relative">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onThemeToggle}
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-all"
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+          </span>
+        </button>
+
+        <div className="relative">
         <button
           onClick={() => setProfileOpen((p) => !p)}
           className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl hover:bg-white/5 transition-all"
@@ -123,6 +136,7 @@ export default function Topbar({ onMenuToggle, sidebarCollapsed }) {
             </div>
           </>
         )}
+        </div>
       </div>
     </header>
   )

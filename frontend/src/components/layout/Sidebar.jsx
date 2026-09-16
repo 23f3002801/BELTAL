@@ -1,18 +1,7 @@
-import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-/**
- * Sidebar — Role-aware collapsible navigation
- *
- * Role → nav link mapping:
- *   admin           → User Management, Sovereign Nodes, Audit Vault
- *   defence_officer → DID Issuance, Asset Provenance Ledger, Sign Dispatch
- *   auditor         → Read-only Ledgers, Verification Logs
- *   user (default)  → Dashboard only
- */
-
-/* ── Nav link definitions per role ─────────────────────── */
 const ROLE_LINKS = {
   ADMIN: [
     { path: '/admin', icon: 'dashboard', label: 'Admin Dashboard' },
@@ -25,22 +14,29 @@ const ROLE_LINKS = {
     { path: '/admin/audit', icon: 'policy', label: 'Audit Vault' },
   ],
   MANAGER: [
-    { path: '/dashboard', icon: 'dashboard', label: 'Manager Dashboard' }, // Changed label
+    { path: '/manager/dashboard', icon: 'dashboard', label: 'Manager Dashboard' },
+    { path: '/team', icon: 'groups', label: 'Team Members' },
+    { path: '/team-assets', icon: 'inventory_2', label: 'Team Assets' },
+    { path: '/transfer/initiate', icon: 'swap_horiz', label: 'Initiate Transfer' },
+    { path: '/transfers', icon: 'approval', label: 'Transfer Approvals' },
     { path: '/assets/ledger', icon: 'token', label: 'Asset Provenance Ledger' },
-    { path: '/transfers', icon: 'swap_horiz', label: 'Transfer Approvals' }, // Reusing admin transfer page but RBAC will handle it
-    // ...
+    { path: '/did/issue', icon: 'badge', label: 'DID Issuance' },
+    { path: '/dispatch/sign', icon: 'verified_user', label: 'Sign Dispatch' },
   ],
   AUDITOR: [
-    { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { path: '/auditor/dashboard', icon: 'dashboard', label: 'Auditor Dashboard' },
+    { path: '/audit/explorer', icon: 'search', label: 'Audit Trail Explorer' },
     { path: '/audit/ledgers', icon: 'menu_book', label: 'Read-Only Ledgers' },
     { path: '/audit/logs', icon: 'receipt_long', label: 'Verification Logs' },
   ],
   USER: [
-    { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { path: '/dashboard', icon: 'dashboard', label: 'My Dashboard' },
+    { path: '/my-assets', icon: 'inventory_2', label: 'My Assets' },
+    { path: '/transfer/request', icon: 'swap_horiz', label: 'Request Transfer' },
+    { path: '/profile', icon: 'person', label: 'My Profile' },
   ],
-}
+};
 
-/* ── Icon helper ────────────────────────────────────────── */
 function NavIcon({ name, active }) {
   return (
     <span
@@ -50,23 +46,23 @@ function NavIcon({ name, active }) {
     >
       {name}
     </span>
-  )
+  );
 }
 
 export default function Sidebar({ collapsed, onToggle }) {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-  const role = user?.role ?? 'user'
-  const links = ROLE_LINKS[role] ?? ROLE_LINKS.USER
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const role = user?.role ?? 'USER';
+  const links = ROLE_LINKS[role] ?? ROLE_LINKS.USER;
 
   const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
+    logout();
+    navigate('/');
+  };
 
   return (
     <>
-      {/* ── Desktop sidebar ─────────────────────────────── */}
+      {/* Desktop sidebar */}
       <aside
         className={`hidden md:flex flex-col h-screen sticky top-0 shrink-0 transition-all duration-300 z-30
           bg-[#060D1A] border-r border-[#1F293D]
@@ -111,7 +107,8 @@ export default function Sidebar({ collapsed, onToggle }) {
                 `group flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold tracking-wide transition-all duration-150
                 ${isActive
                   ? 'bg-[#1E3E62]/60 text-[#D4AF37] border border-[#1E5FA8]/30'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent'}`
+                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent'
+                }`
               }
               title={collapsed ? label : undefined}
             >
@@ -146,9 +143,6 @@ export default function Sidebar({ collapsed, onToggle }) {
           </button>
         </div>
       </aside>
-
-      {/* ── Mobile drawer (slide-in, triggered externally) ─ */}
-      {/* The mobile toggle is in Topbar; drawer shown when !collapsed on mobile */}
     </>
-  )
+  );
 }
