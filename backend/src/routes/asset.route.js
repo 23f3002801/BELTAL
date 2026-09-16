@@ -12,11 +12,11 @@ const router = express.Router();
  * Restricted to ADMIN and MANAGER
  */
 router.post(
-    '/',
-    authenticate,
-    requireRole('ADMIN', 'MANAGER'),
-    validate(createAssetSchema),
-    assetController.mintAsset
+  '/',
+  authenticate,
+  requireRole('ADMIN', 'MANAGER'),
+  validate(createAssetSchema),
+  assetController.mintAsset
 );
 
 /**
@@ -31,11 +31,11 @@ router.get('/my', authenticate, assetController.getMyAssets);
  * Restricted to ADMIN, MANAGER, and AUDITOR
  */
 router.get(
-    '/',
-    authenticate,
-    requireRole('ADMIN', 'MANAGER', 'AUDITOR'),
-    validate(getAssetsQuerySchema, 'query'),
-    assetController.listAssets
+  '/',
+  authenticate,
+  requireRole('ADMIN', 'MANAGER', 'AUDITOR'),
+  validate(getAssetsQuerySchema, 'query'),
+  assetController.listAssets
 );
 
 /**
