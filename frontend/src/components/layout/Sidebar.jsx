@@ -1,148 +1,125 @@
 import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
-const ROLE_LINKS = {
-  ADMIN: [
-    { path: '/admin', icon: 'dashboard', label: 'Admin Dashboard' },
-    { path: '/admin/identities', icon: 'manage_accounts', label: 'Identity Ledger' },
-    { path: '/admin/roles', icon: 'admin_panel_settings', label: 'Role & Clearance' },
-    { path: '/admin/mint-asset', icon: 'token', label: 'Mint Asset' },
-    { path: '/admin/assets', icon: 'inventory_2', label: 'Asset Ledger' },
-    { path: '/admin/transfers', icon: 'swap_horiz', label: 'Transfer Approvals' },
-    { path: '/admin/nodes', icon: 'hub', label: 'Sovereign Nodes' },
-    { path: '/admin/audit', icon: 'policy', label: 'Audit Vault' },
-  ],
-  MANAGER: [
-    { path: '/manager/dashboard', icon: 'dashboard', label: 'Manager Dashboard' },
-    { path: '/team', icon: 'groups', label: 'Team Members' },
-    { path: '/team-assets', icon: 'inventory_2', label: 'Team Assets' },
-    { path: '/transfer/initiate', icon: 'swap_horiz', label: 'Initiate Transfer' },
-    { path: '/transfers', icon: 'approval', label: 'Transfer Approvals' },
-    { path: '/assets/ledger', icon: 'token', label: 'Asset Provenance Ledger' },
-    { path: '/did/issue', icon: 'badge', label: 'DID Issuance' },
-    { path: '/dispatch/sign', icon: 'verified_user', label: 'Sign Dispatch' },
-  ],
-  AUDITOR: [
-    { path: '/auditor/dashboard', icon: 'dashboard', label: 'Auditor Dashboard' },
-    { path: '/audit/explorer', icon: 'search', label: 'Audit Trail Explorer' },
-    { path: '/audit/ledgers', icon: 'menu_book', label: 'Read-Only Ledgers' },
-    { path: '/audit/logs', icon: 'receipt_long', label: 'Verification Logs' },
-  ],
-  USER: [
-    { path: '/dashboard', icon: 'dashboard', label: 'My Dashboard' },
-    { path: '/my-assets', icon: 'inventory_2', label: 'My Assets' },
-    { path: '/transfer/request', icon: 'swap_horiz', label: 'Request Transfer' },
-    { path: '/profile', icon: 'person', label: 'My Profile' },
-  ],
-};
-
-function NavIcon({ name, active }) {
-  return (
-    <span
-      className={`material-symbols-outlined text-[20px] shrink-0 transition-colors ${active ? 'text-[#D4AF37]' : 'text-slate-400 group-hover:text-slate-200'
-        }`}
-      style={active ? { fontVariationSettings: '"FILL" 1' } : {}}
-    >
-      {name}
-    </span>
-  );
-}
-
-export default function Sidebar({ collapsed, onToggle }) {
-  const { user, logout } = useAuth();
+export default function Sidebar({ collapsed, setCollapsed }) {
   const navigate = useNavigate();
-  const role = user?.role ?? 'USER';
-  const links = ROLE_LINKS[role] ?? ROLE_LINKS.USER;
+  const location = useLocation();
+  const { user, logout } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+  const menuItems = [
+    { path: '/user/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['USER'] },
+    { path: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['ADMIN'] },
+    { path: '/manager/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['MANAGER'] },
+    { path: '/auditor/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['AUDITOR'] },
+    { path: '/my-assets', label: 'My Assets', icon: 'inventory_2', roles: ['USER'] },
+    { path: '/transfer/request', label: 'Request Transfer', icon: 'send', roles: ['USER'] },
+    { path: '/team', label: 'Team Members', icon: 'groups', roles: ['MANAGER'] },
+    { path: '/team-assets', label: 'Team Assets', icon: 'shield', roles: ['MANAGER'] },
+    { path: '/transfers', label: 'Transfer Approvals', icon: 'swap_horiz', roles: ['MANAGER', 'ADMIN'] },
+    { path: '/admin/identities', label: 'Identity Ledger', icon: 'fingerprint', roles: ['ADMIN'] },
+    { path: '/admin/assets', label: 'Asset Registry', icon: 'token', roles: ['ADMIN'] },
+    { path: '/audit/explorer', label: 'Audit Trail', icon: 'receipt_long', roles: ['AUDITOR'] },
+  ];
+
+  const filteredMenu = menuItems.filter(item => item.roles.includes(user?.role));
+
+  // ─── Theme-aware classes ───
+  const bg = isDark ? 'bg-[#060D1A]' : 'bg-[linear-gradient(180deg,#d7ecff_0%,#e9f5ff_48%,#dceeff_100%)] backdrop-blur-xl';
+  const border = isDark ? 'border-[#1F293D]' : 'border-[#B9DCEF]';
+  const textPrimary = isDark ? 'text-slate-300' : 'text-[#0A1F3D]';
+  const textMuted = isDark ? 'text-slate-500' : 'text-[#6B7280]';
+  const hoverBg = isDark ? 'hover:bg-white/5' : 'hover:bg-white/75 hover:shadow-sm';
+  const activeBg = isDark ? 'bg-[#0D1F38] text-[#D4AF37]' : 'bg-[#0D2B4E] text-white shadow-[0_8px_20px_rgba(13,43,78,0.16)]';
+  const inactiveText = isDark ? 'text-slate-400' : 'text-[#4A5568]';
 
   return (
-    <>
-      {/* Desktop sidebar */}
-      <aside
-        className={`hidden md:flex flex-col h-screen sticky top-0 shrink-0 transition-all duration-300 z-30
-          bg-[#060D1A] border-r border-[#1F293D]
-          ${collapsed ? 'w-[64px]' : 'w-[220px]'}`}
-      >
-        {/* Brand */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-[#1F293D] shrink-0">
-          <img
-            src="/bel-shield.svg"
-            alt="BEL Shield"
-            className="w-8 h-8 object-contain shrink-0"
-          />
+    <aside
+      className={`
+        fixed inset-y-0 left-0 z-40 flex flex-col border-r transition-[width] duration-200 ease-out
+        ${bg} ${border} ${textPrimary}
+        ${collapsed ? 'w-16' : 'w-64'}
+      `}
+    >
+      {/* ── Logo ── */}
+      <div className={`h-16 flex items-center ${collapsed ? 'justify-center' : 'px-5'} border-b ${border}`}>
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-[28px] text-[#D4AF37]" style={{ fontVariationSettings: "'FILL' 1" }}>
+            security
+          </span>
           {!collapsed && (
-            <div className="overflow-hidden">
-              <div className="text-[15px] font-black text-white tracking-widest leading-none">
-                BEL<span className="text-[#1E5FA8]">TAL</span>
-              </div>
-              <div className="text-[8px] font-bold tracking-[0.18em] text-[#D4AF37]/80 uppercase mt-0.5">
-                Sovereign Ledger
-              </div>
+            <div className="flex flex-col">
+              <span className={`text-sm font-black tracking-widest ${isDark ? 'text-white' : 'text-[#0A1F3D]'}`}>
+                BELTAL
+              </span>
+              <span className={`text-[10px] font-bold tracking-[0.22em] ${isDark ? 'text-[#D4AF37]' : 'text-[#B8962E]'}`}>
+                SOVEREIGN LEDGER
+              </span>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Role badge */}
-        {!collapsed && (
-          <div className="mx-3 my-3 px-3 py-1.5 rounded-lg bg-[#0D1F38] border border-[#1F293D] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="text-[10px] font-bold tracking-widest text-[#7ab0fe] uppercase">
-              {role}
-            </span>
+      {/* ── User Info ── */}
+      {!collapsed && (
+        <div className={`px-4 py-3 border-b ${border}`}>
+          <div className={`px-3 py-1.5 rounded-md text-[11px] font-black tracking-wider inline-block ${
+            isDark ? 'bg-[#0D1F38] text-[#D4AF37] border border-[#1F293D]' : 'bg-[#0A1F3D] text-[#FDFBF7]'
+          }`}>
+            {user?.role || 'USER'}
           </div>
-        )}
-
-        {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-1">
-          {links.map(({ path, icon, label }) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) =>
-                `group flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold tracking-wide transition-all duration-150
-                ${isActive
-                  ? 'bg-[#1E3E62]/60 text-[#D4AF37] border border-[#1E5FA8]/30'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent'
-                }`
-              }
-              title={collapsed ? label : undefined}
-            >
-              {({ isActive }) => (
-                <>
-                  <NavIcon name={icon} active={isActive} />
-                  {!collapsed && <span className="truncate">{label}</span>}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Footer: collapse toggle + logout */}
-        <div className="shrink-0 border-t border-[#1F293D] p-2 space-y-1">
-          <button
-            onClick={onToggle}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-all text-[13px] font-medium"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <span className="material-symbols-outlined text-[20px]">
-              {collapsed ? 'chevron_right' : 'chevron_left'}
-            </span>
-            {!collapsed && <span>Collapse</span>}
-          </button>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-red-500/80 hover:text-red-400 hover:bg-red-950/30 transition-all text-[13px] font-medium"
-          >
-            <span className="material-symbols-outlined text-[20px]">logout</span>
-            {!collapsed && <span>Logout</span>}
-          </button>
+          <p className={`text-xs mt-1.5 truncate font-medium ${isDark ? 'text-slate-400' : 'text-[#4A5568]'}`}>
+            {user?.displayName || 'Registered User'}
+          </p>
         </div>
-      </aside>
-    </>
+      )}
+
+      {/* ── Navigation ── */}
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {filteredMenu.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`
+                w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-all
+                ${isActive ? activeBg : `${inactiveText} ${hoverBg}`}
+                ${collapsed ? 'justify-center' : ''}
+              `}
+              title={collapsed ? item.label : ''}
+            >
+              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                {item.icon}
+              </span>
+              {!collapsed && <span>{item.label}</span>}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* ── Bottom Actions ── */}
+      <div className={`p-3 border-t ${border} space-y-1`}>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${inactiveText} ${hoverBg} ${collapsed ? 'justify-center' : ''}`}
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            {collapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+          {!collapsed && <span>Collapse</span>}
+        </button>
+        <button
+          onClick={logout}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-all text-red-500 ${isDark ? 'hover:bg-red-500/10' : 'hover:bg-red-50'} ${collapsed ? 'justify-center' : ''}`}
+        >
+          <span className="material-symbols-outlined text-[20px]">logout</span>
+          {!collapsed && <span>Logout</span>}
+        </button>
+      </div>
+    </aside>
   );
 }

@@ -291,7 +291,7 @@ export default function IdentityTable({ refreshTrigger, onRegisterClick }) {
       label: 'Role',
       render: (val) => (
         <span
-          className={`inline-block text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded border
+          className={`identity-role-badge inline-block text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded border
             ${ROLE_COLORS[val] ?? 'text-slate-400 bg-slate-800/30 border-slate-600/30'}`}
         >
           {val ?? '—'}
@@ -304,7 +304,7 @@ export default function IdentityTable({ refreshTrigger, onRegisterClick }) {
       align: 'center',
       render: (val) => (
         <span
-          className={`inline-block text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full border
+          className={`identity-clearance-badge inline-block text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full border
             ${TIER_COLORS[val] ?? TIER_COLORS[1]}`}
         >
           T-{val ?? '?'}

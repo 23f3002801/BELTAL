@@ -46,7 +46,7 @@ export default function RoleAssignment() {
     };
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="role-console min-h-full p-6 sm:p-8 space-y-6">
             <div className="flex items-center gap-2 mb-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-[#D4AF37]/40 to-transparent" />
                 <span className="text-[9px] font-black tracking-[0.22em] text-[#D4AF37]/60 uppercase">

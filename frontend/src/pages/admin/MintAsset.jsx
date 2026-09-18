@@ -60,7 +60,8 @@ export default function MintAsset() {
     };
 
     return (
-        <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
+        <div className="role-console min-h-full p-6 sm:p-8 max-w-none space-y-6">
+          <div className="max-w-3xl mx-auto space-y-6">
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <span className="h-px w-12 bg-gradient-to-r from-blue-500/40 to-transparent" />
@@ -184,6 +185,7 @@ export default function MintAsset() {
                     </form>
                 </CardContent>
             </Card>
+          </div>
         </div>
     );
 }

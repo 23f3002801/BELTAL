@@ -18,8 +18,13 @@ export default function AssetList() {
     const fetchAssets = async () => {
         setLoading(true);
         try {
-            const data = await assetApi.list(filters);
-            setAssets(data.assets || []);
+            // Do not send empty filters. The API validates supplied values, so
+            // `sbu=` and `classificationTier=` are not equivalent to no filter.
+            const activeFilters = Object.fromEntries(
+                Object.entries(filters).filter(([, value]) => value !== '')
+            );
+            const data = await assetApi.list(activeFilters);
+            setAssets(Array.isArray(data) ? data : (data.assets || []));
         } catch (err) {
             console.error("Failed to fetch assets", err);
             alert("Failed to load assets: " + (err.uiMessage || err.message));
@@ -33,7 +38,7 @@ export default function AssetList() {
     };
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="role-console min-h-full p-6 sm:p-8 space-y-6">
             <div className="flex items-center gap-2 mb-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-[#D4AF37]/40 to-transparent" />
                 <span className="text-[9px] font-black tracking-[0.22em] text-[#D4AF37]/60 uppercase">

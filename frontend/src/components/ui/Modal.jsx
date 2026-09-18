@@ -71,7 +71,7 @@ export default function Modal({
         tabIndex={-1}
         style={{ animation: 'modalIn 200ms cubic-bezier(0.16,1,0.3,1)' }}
         className={[
-          'relative w-full rounded-2xl outline-none',
+          'beltal-modal relative w-full rounded-2xl outline-none',
           'bg-[#0B1726] border border-[#1E2E48] shadow-[0_24px_64px_rgba(0,0,0,0.7)]',
           'flex flex-col max-h-[90vh]',
           SIZE_MAP[size] ?? SIZE_MAP.md,

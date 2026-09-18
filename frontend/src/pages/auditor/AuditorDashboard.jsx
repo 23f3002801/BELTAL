@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { auditApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import Card, { CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 
 export default function AuditorDashboard() {
+    const { user } = useAuth();
     const [stats, setStats] = useState({
         identityCreated: 0,
         roleChanged: 0,
@@ -76,10 +78,31 @@ export default function AuditorDashboard() {
         });
     };
 
+    const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
+
     return (
-        <div className="p-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-3">
+        <div className="role-console auditor-dashboard min-h-full p-5 sm:p-8 space-y-6">
+            <section className="auditor-welcome">
+                <div className="relative z-10">
+                    <div className="auditor-eyebrow"><span className="h-2 w-2 rounded-full bg-[#E8CC71]" /> AUDITOR CLEARANCE · READ-ONLY ACCESS</div>
+                    <p className="mt-5 text-sm font-semibold text-[#C5DDF7]">{greeting},</p>
+                    <h1>Welcome, <span>{user?.displayName || 'Auditor'}</span>.</h1>
+                    <p className="auditor-welcome-copy">Monitor ledger activity, verify records, and maintain a trusted audit trail from one clear workspace.</p>
+                </div>
+                <div className="auditor-status-card relative z-10">
+                    <div className="flex items-center justify-between border-b border-white/15 pb-3">
+                        <span className="flex items-center gap-2 text-[11px] font-bold tracking-wider text-white"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" /> LEDGER ONLINE</span>
+                        <span className="font-mono text-[10px] text-[#C5DDF7]">#4,928,192</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                        <div><p className="text-[10px] font-bold tracking-wider text-[#A9BFDE]">ACCESS LEVEL</p><p className="mt-1 text-sm font-bold text-white">Auditor</p></div>
+                        <div><p className="text-[10px] font-bold tracking-wider text-[#A9BFDE]">RECENT EVENTS</p><p className="mt-1 text-sm font-bold text-white">{loading ? 'Syncing' : auditEvents.length}</p></div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Legacy header replaced by the focused welcome panel above. */}
+            <div className="hidden">
                 <span className="h-px flex-1 bg-gradient-to-r from-[#D4AF37]/40 to-transparent" />
                 <span className="text-[9px] font-black tracking-[0.22em] text-[#D4AF37]/60 uppercase">
                     ◈ AUDITOR CLEARANCE — READ-ONLY ACCESS

@@ -99,7 +99,7 @@ export default function AuditTrailExplorer() {
     const totalPages = Math.ceil(total / pagination.limit);
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="role-console audit-explorer min-h-full p-5 sm:p-8 space-y-6">
             {/* Header */}
             <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -113,9 +113,9 @@ export default function AuditTrailExplorer() {
             </div>
 
             {/* Filters */}
-            <Card goldAccent={false}>
+            <Card goldAccent={false} className="audit-surface">
                 <CardHeader>
-                    <CardTitle>Filter Audit Events</CardTitle>
+                    <div><CardTitle>Filter Audit Events</CardTitle><p className="mt-1 text-xs text-slate-500">Narrow the ledger using any combination of fields.</p></div>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -190,8 +190,9 @@ export default function AuditTrailExplorer() {
 
                         <div className="flex items-end">
                             <button
+                                type="button"
                                 onClick={clearFilters}
-                                className="w-full px-4 py-2 bg-[#1F293D] hover:bg-[#2D3748] text-white text-xs font-bold rounded transition-colors"
+                                className="audit-clear-button w-full px-4 py-2 text-xs font-bold rounded transition-colors"
                             >
                                 Clear All Filters
                             </button>
@@ -201,20 +202,18 @@ export default function AuditTrailExplorer() {
             </Card>
 
             {/* Audit Events Table */}
-            <Card goldAccent={false}>
+            <Card goldAccent={false} className="audit-surface audit-events-card">
                 <CardHeader>
-                    <CardTitle>
-                        Audit Events ({total} total)
-                    </CardTitle>
+                    <div className="flex w-full items-center justify-between gap-3"><div><CardTitle>Audit Events</CardTitle><p className="mt-1 text-xs text-slate-500">Select a record to inspect its complete, immutable payload.</p></div><span className="audit-count">{loading ? 'SYNCING' : `${total} TOTAL`}</span></div>
                 </CardHeader>
                 <CardContent>
                     {error && (
-                        <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-800/50 bg-red-950/20 p-4 text-sm text-red-200">
-                            <span className="material-symbols-outlined text-red-400">error</span>
+                        <div className="audit-error-state mb-4 flex items-start gap-3 rounded-lg border p-4 text-sm" role="alert">
+                            <span className="audit-error-icon material-symbols-outlined">error</span>
                             <div>
-                                <p className="font-bold">Unable to load the audit trail</p>
-                                <p className="mt-1 text-xs text-red-300/80">{error}</p>
-                                <button onClick={fetchEvents} className="mt-3 text-xs font-bold text-red-200 underline hover:text-white">Retry</button>
+                                <p className="audit-error-title font-bold">Unable to load the audit trail</p>
+                                <p className="audit-error-message mt-1 text-xs">{error}</p>
+                                <button type="button" onClick={fetchEvents} className="audit-error-retry mt-3 text-xs font-bold underline">Retry</button>
                             </div>
                         </div>
                     )}
@@ -223,7 +222,7 @@ export default function AuditTrailExplorer() {
                     ) : (
                         <>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-slate-300">
+                                <table className="audit-table w-full text-left text-sm text-slate-300">
                                     <thead className="text-xs uppercase text-[#D4AF37] border-b border-[#1F293D]">
                                         <tr>
                                             <th className="px-4 py-3">Action</th>

@@ -1,143 +1,139 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
-/**
- * Topbar — Active network status + Officer profile menu
- */
+export default function Topbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-export default function Topbar({ onMenuToggle, sidebarCollapsed, theme, onThemeToggle }) {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-  const [profileOpen, setProfileOpen] = useState(false)
-
-  const initials = user?.name
-    ? user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
-    : 'OF'
-
-  const handleLogout = () => {
-    setProfileOpen(false)
-    logout()
-    navigate('/')
-  }
+  // ─── Theme-aware classes ───
+  const bg = isDark ? 'bg-[#060D1A]/95' : 'bg-[#E8F1FB]/80';
+  const border = isDark ? 'border-[#1F293D]' : 'border-[#B9DCEF]';
+  const textPrimary = isDark ? 'text-white' : 'text-[#0A1F3D]';
+  const textSecondary = isDark ? 'text-slate-400' : 'text-[#6B7280]';
 
   return (
-    <header className="h-14 shrink-0 flex items-center justify-between px-4 md:px-6 border-b border-[#1F293D] bg-[#070F1E] z-20">
+    <header
+      className={`
+        sticky top-0 z-30 h-16 flex items-center justify-between px-6 border-b backdrop-blur transition-all
+        ${bg} ${border}
+      `}
+    >
+      {/* ── Left: Page Title (optional, can be dynamic) ── */}
+      <div className="flex items-center gap-4">
+        <h1 className={`text-lg font-bold ${textPrimary}`}>
+          Dashboard
+        </h1>
+      </div>
 
-      {/* ── Left: Mobile hamburger + page breadcrumb ─────── */}
-      <div className="flex items-center gap-3">
-        {/* Mobile hamburger */}
-        <button
-          onClick={onMenuToggle}
-          className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all"
-          aria-label="Toggle navigation"
-        >
-          <span className="material-symbols-outlined text-[22px]">menu</span>
-        </button>
-
-        {/* Network status pill */}
-        <div className="flex items-center gap-2 bg-[#0D1F38] border border-[#1F293D] rounded-full px-3 py-1.5">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          </span>
-          <span className="text-[11px] font-bold tracking-wider text-emerald-300 hidden sm:inline">
+      {/* ── Right: Status, Theme Toggle & User ── */}
+      <div className="flex items-center gap-5">
+        {/* Network Status */}
+        <div className="hidden md:flex items-center gap-4">
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wider border ${
+            isDark
+              ? 'bg-emerald-950/40 text-emerald-400 border-emerald-700/30'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          }`}>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             34 Sovereign Nodes
-          </span>
-          <span className="text-[10px] text-emerald-400/60 hidden sm:inline">•</span>
-          <span className="text-[11px] font-semibold text-emerald-400 hidden sm:inline">
-            Active
+          </div>
+          <span className={`text-[12px] font-mono ${textSecondary}`}>
+            Block #4,928,192
           </span>
         </div>
 
-        {/* Block counter */}
-        <span className="hidden lg:flex items-center gap-1.5 text-[11px] font-mono text-slate-500">
-          <span className="material-symbols-outlined text-[14px] text-[#1E5FA8]">receipt_long</span>
-          Block #4,928,192
-        </span>
-      </div>
-
-      {/* ── Right: Profile dropdown ──────────────────────── */}
-      <div className="flex items-center gap-2">
+        {/* Theme Toggle Button */}
         <button
-          type="button"
-          onClick={onThemeToggle}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-all"
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+          onClick={toggleTheme}
+          className={`
+            relative w-[72px] h-9 rounded-full transition-all duration-300 border shadow-sm
+            ${isDark
+              ? 'bg-[#0D1F38] border-[#315071] hover:border-[#D4AF37]/50'
+              : 'bg-white/65 border-[#A9CDEB] hover:border-[#1E5FA8]/50'
+            }
+          `}
+          aria-label="Toggle theme"
         >
-          <span className="material-symbols-outlined text-[20px]">
-            {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+          <span
+            className={`
+              absolute top-1 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 shadow-md
+              ${isDark
+                ? 'left-10 bg-[#D4AF37] text-[#0D2B4E]'
+                : 'left-1 bg-[#1E5FA8] text-white'
+              }
+            `}
+          >
+            <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+              {isDark ? 'dark_mode' : 'light_mode'}
+            </span>
           </span>
         </button>
 
+        {/* User Profile */}
         <div className="relative">
-        <button
-          onClick={() => setProfileOpen((p) => !p)}
-          className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl hover:bg-white/5 transition-all"
-        >
-          {/* Avatar */}
-          <div className="w-7 h-7 rounded-full bg-[#1E3E62] border border-[#1E5FA8]/40 flex items-center justify-center shrink-0">
-            <span className="text-[11px] font-black text-[#7ab0fe]">{initials}</span>
-          </div>
-          <div className="hidden sm:flex flex-col items-start leading-none">
-            <span className="text-[12px] font-bold text-slate-200">{user?.name ?? 'Officer'}</span>
-            <span className="text-[10px] font-medium text-[#D4AF37]/80 capitalize">{user?.role ?? 'user'}</span>
-          </div>
-          <span className="material-symbols-outlined text-[16px] text-slate-500">expand_more</span>
-        </button>
-
-        {/* Dropdown */}
-        {profileOpen && (
-          <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setProfileOpen(false)}
-              aria-hidden="true"
-            />
-            <div className="absolute right-0 top-full mt-2 w-52 rounded-xl bg-[#0D1F38] border border-[#1F293D] shadow-[0_16px_48px_rgba(0,0,0,0.6)] overflow-hidden z-20">
-              {/* User info */}
-              <div className="px-4 py-3 border-b border-[#1F293D]">
-                <p className="text-[12px] font-bold text-slate-200 truncate">{user?.name ?? 'Officer'}</p>
-                <p className="text-[10px] text-slate-500 truncate">{user?.email ?? ''}</p>
-                <span className="inline-block mt-1 text-[9px] font-bold tracking-widest text-[#D4AF37] uppercase bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2 py-0.5 rounded-full">
-                  {user?.role ?? 'user'}
-                </span>
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className={`flex items-center gap-3 pl-4 border-l ${border} transition-colors ${isDark ? 'hover:bg-white/5' : 'hover:bg-[#0A1F3D]/5'} rounded-lg px-3 py-1.5`}
+          >
+            <div className="text-right">
+              <div className={`text-[13px] font-bold ${textPrimary}`}>
+                {user?.displayName || 'User'}
               </div>
-
-              {/* Actions */}
-              <div className="py-1">
-                {[
-                  { icon: 'person', label: 'My Profile',   path: '/profile' },
-                  { icon: 'settings', label: 'Settings',   path: '/settings' },
-                  { icon: 'help',   label: 'Support',      path: '/support' },
-                ].map(({ icon, label, path }) => (
-                  <button
-                    key={path}
-                    onClick={() => { setProfileOpen(false); navigate(path) }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-left"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">{icon}</span>
-                    {label}
-                  </button>
-                ))}
+              <div className={`text-[10px] font-black tracking-widest ${isDark ? 'text-[#D4AF37]' : 'text-[#B8962E]'}`}>
+                {user?.role || 'USER'}
               </div>
+            </div>
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+              isDark
+                ? 'bg-gradient-to-br from-[#D4AF37] to-[#B8962E]'
+                : 'bg-gradient-to-br from-[#0A1F3D] to-[#1E5FA8]'
+            }`}>
+              <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                person
+              </span>
+            </div>
+          </button>
 
-              {/* Logout */}
-              <div className="border-t border-[#1F293D] py-1">
+          {/* Dropdown */}
+          {userMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+              <div className={`absolute right-0 mt-2 w-48 rounded-lg border shadow-lg z-50 overflow-hidden ${
+                isDark ? 'bg-[#0D1F38] border-[#1F293D]' : 'bg-white border-[#E8E0D0]'
+              }`}>
                 <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-400 hover:text-red-300 hover:bg-red-950/30 transition-all text-left"
+                  onClick={() => { setUserMenuOpen(false); navigate('/profile'); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
+                    isDark ? 'text-slate-300 hover:bg-white/5' : 'text-[#0A1F3D] hover:bg-[#0A1F3D]/5'
+                  }`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">logout</span>
+                  My Profile
+                </button>
+                <button
+                  onClick={() => { setUserMenuOpen(false); navigate('/settings'); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
+                    isDark ? 'text-slate-300 hover:bg-white/5' : 'text-[#0A1F3D] hover:bg-[#0A1F3D]/5'
+                  }`}
+                >
+                  Settings
+                </button>
+                <div className={`border-t ${isDark ? 'border-[#1F293D]' : 'border-[#E8E0D0]'}`} />
+                <button
+                  onClick={logout}
+                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                >
                   Logout
                 </button>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
         </div>
       </div>
     </header>
-  )
+  );
 }

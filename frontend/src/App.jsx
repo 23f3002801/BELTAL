@@ -1,40 +1,40 @@
-import { useEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect, useRef } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui/Toast";
 import { TransactionProvider } from "./context/TransactionContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BaseLayout from "./components/layout/BaseLayout";
 import LandingPage from "./pages/LandingPage";
-import ContactPage from "./pages/ContactPage";
-import UIKitPage from "./pages/UIKitPage";
-import DashboardRedirect from "./pages/DashboardRedirect";
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const UIKitPage = lazy(() => import("./pages/UIKitPage"));
+const DashboardRedirect = lazy(() => import("./pages/DashboardRedirect"));
 
 // Admin Pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import IdentityLedger from "./pages/admin/IdentityLedger";
-import RoleAssignment from "./pages/admin/RoleAssignment";
-import MintAsset from "./pages/admin/MintAsset";
-import AssetList from "./pages/admin/AssetList";
-import TransferApprovals from "./pages/admin/TransferApprovals";
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const IdentityLedger = lazy(() => import("./pages/admin/IdentityLedger"));
+const RoleAssignment = lazy(() => import("./pages/admin/RoleAssignment"));
+const MintAsset = lazy(() => import("./pages/admin/MintAsset"));
+const AssetList = lazy(() => import("./pages/admin/AssetList"));
+const TransferApprovals = lazy(() => import("./pages/admin/TransferApprovals"));
 
 // Manager Pages
-import ManagerDashboard from "./pages/manager/ManagerDashboard";
-import TeamMembers from "./pages/manager/TeamMembers";
-import TeamAssets from "./pages/manager/TeamAssets";
-import InitiateTransfer from "./pages/manager/InitiateTransfer";
+const ManagerDashboard = lazy(() => import("./pages/manager/ManagerDashboard"));
+const TeamMembers = lazy(() => import("./pages/manager/TeamMembers"));
+const TeamAssets = lazy(() => import("./pages/manager/TeamAssets"));
+const InitiateTransfer = lazy(() => import("./pages/manager/InitiateTransfer"));
 
 // Auditor Pages
-import AuditorDashboard from "./pages/auditor/AuditorDashboard";
-import AuditTrailExplorer from "./pages/auditor/AuditTrailExplorer";
+const AuditorDashboard = lazy(() => import("./pages/auditor/AuditorDashboard"));
+const AuditTrailExplorer = lazy(() => import("./pages/auditor/AuditTrailExplorer"));
 
 // User Pages
-import UserDashboard from "./pages/user/UserDashboard";
-import MyAssets from "./pages/user/MyAssets";
-import AssetDetail from "./pages/user/AssetDetail";
-import RequestTransferForm from "./pages/user/RequestTransferForm";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
+const UserDashboard = lazy(() => import("./pages/user/UserDashboard"));
+const MyAssets = lazy(() => import("./pages/user/MyAssets"));
+const AssetDetail = lazy(() => import("./pages/user/AssetDetail"));
+const RequestTransferForm = lazy(() => import("./pages/user/RequestTransferForm"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 import ErrorBoundary from "./components/ErrorBoundary";
 
 /**
@@ -76,15 +76,19 @@ function ScrollToHashSection() {
   return null;
 }
 
+function RouteLoader() {
+  return <div className="app-route-loader" role="status" aria-live="polite"><div className="app-route-loader__mark" /><p>Preparing secure workspace…</p></div>;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
-          <ToastProvider>
-            <TransactionProvider>
-              <ScrollToHashSection />
-              <Routes>
+        <ToastProvider>
+          <TransactionProvider>
+            <ScrollToHashSection />
+            <Suspense fallback={<RouteLoader />}>
+            <Routes>
                 {/* ── Public Routes ── */}
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LandingPage autoOpenLogin />} />
@@ -150,10 +154,10 @@ export default function App() {
 
                 {/* Fallback */}
                 <Route path="*" element={<LandingPage />} />
-              </Routes>
-            </TransactionProvider>
-          </ToastProvider>
-        </BrowserRouter>
+            </Routes>
+            </Suspense>
+          </TransactionProvider>
+        </ToastProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

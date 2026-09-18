@@ -1,60 +1,31 @@
-import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function BaseLayout() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem('beltal-theme') || 'dark');
-
-  useEffect(() => {
-    localStorage.setItem('beltal-theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    const updateTheme = (event) => setTheme(event.detail === 'light' ? 'light' : 'dark');
-    window.addEventListener('beltal:theme-change', updateTheme);
-    return () => window.removeEventListener('beltal:theme-change', updateTheme);
-  }, []);
+  const [collapsed, setCollapsed] = useState(false);
+  const { theme } = useTheme();
+  const location = useLocation();
+  const isDark = theme === 'dark';
 
   return (
-    <div className={`dashboard-theme ${theme === 'light' ? 'light-theme' : 'dark-theme'} min-h-screen bg-[#060D1A] flex`}>
-      {/* Mobile sidebar overlay */}
-      {mobileSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar - Desktop */}
-      <div className="hidden md:block">
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-      </div>
-
-      {/* Sidebar - Mobile */}
-      <div className={`md:hidden ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300`}>
-        <Sidebar
-          collapsed={false}
-          onToggle={() => setMobileSidebarOpen(false)}
-        />
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <Topbar
-          onMenuToggle={() => setMobileSidebarOpen(true)}
-          sidebarCollapsed={sidebarCollapsed}
-          theme={theme}
-          onThemeToggle={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
-        />
-        <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6">
-          <Outlet />
+    <div className={`min-h-screen flex transition-colors duration-200 ${
+      isDark ? 'bg-[#060D1A]' : 'bg-[#E8F1FB]'
+    }`}>
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      <div className={`flex-1 flex flex-col min-h-screen transition-[margin] duration-200 ease-out ${
+        collapsed ? 'ml-16' : 'ml-64'
+      }`}>
+        <Topbar />
+        {/* Page Content */}
+        <main className="flex-1 overflow-x-hidden">
+          <div key={location.pathname} className="app-page-transition">
+            <Outlet />
+          </div>
         </main>
+
       </div>
     </div>
   );
