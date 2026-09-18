@@ -47,7 +47,7 @@ export default function MyAssets() {
     };
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="user-console min-h-full p-6 sm:p-8 space-y-6">
             {/* Header */}
             <div>
                 <div className="flex items-center gap-2 mb-2">

@@ -68,6 +68,7 @@ export default function Button({
   return (
     <button
       type={type}
+      data-variant={variant}
       onClick={onClick}
       disabled={isDisabled}
       className={[

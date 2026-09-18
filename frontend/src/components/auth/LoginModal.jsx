@@ -245,7 +245,7 @@ export default function LoginModal({ isOpen, onClose }) {
         className="fixed inset-0 z-[91] flex items-center justify-center p-4"
       >
         <div
-          className="relative w-full max-w-md bg-[#040B17] border border-[#1E2E48] rounded-2xl shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(30,95,168,0.1)] overflow-hidden"
+          className="beltal-auth-modal relative w-full max-w-md bg-[#040B17] border border-[#1E2E48] rounded-2xl shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(30,95,168,0.1)] overflow-hidden"
           style={{ animation: 'modalIn 280ms cubic-bezier(0.16,1,0.3,1)' }}
           onClick={(e) => e.stopPropagation()}
         >

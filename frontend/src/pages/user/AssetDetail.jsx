@@ -45,7 +45,7 @@ export default function AssetDetail() {
 
     if (loading) {
         return (
-            <div className="p-6 flex items-center justify-center min-h-[60vh]">
+            <div className="user-console p-6 flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="inline-block w-10 h-10 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-slate-400 mt-3 text-sm">Loading asset details...</p>
@@ -56,7 +56,7 @@ export default function AssetDetail() {
 
     if (!asset) {
         return (
-            <div className="p-6">
+            <div className="user-console p-6">
                 <Card goldAccent={false}>
                     <CardContent>
                         <div className="text-center py-12">
@@ -78,7 +78,7 @@ export default function AssetDetail() {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="user-console min-h-full p-6 sm:p-8 space-y-6">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-xs text-slate-400">
                 <Link to="/my-assets" className="hover:text-emerald-400 transition-colors">

@@ -64,7 +64,8 @@ export default function InitiateTransfer() {
     const selectedMember = teamMembers.find((m) => m.id === formData.toUserId);
 
     return (
-        <div className="p-6 max-w-3xl mx-auto space-y-6">
+        <div className="role-console min-h-full p-6 sm:p-8 max-w-none space-y-6">
+          <div className="max-w-3xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -217,6 +218,7 @@ export default function InitiateTransfer() {
                     </form>
                 </CardContent>
             </Card>
+          </div>
         </div>
     );
 }

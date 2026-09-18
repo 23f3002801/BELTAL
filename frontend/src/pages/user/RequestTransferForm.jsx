@@ -16,6 +16,7 @@ export default function RequestTransferForm() {
   const [assets, setAssets] = useState([]);
   const [identities, setIdentities] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [loadProblem, setLoadProblem] = useState('');
 
   const [formData, setFormData] = useState({
     assetId: preselectedAssetId || '',
@@ -40,15 +41,28 @@ export default function RequestTransferForm() {
   }, [user]);
 
   const loadData = async () => {
-    try {
-      const assetsData = await assetApi.listMine();
-      setAssets(assetsData || []);
+    setLoadProblem('');
+    const [assetsResult, recipientsResult] = await Promise.allSettled([
+      assetApi.listMine(),
+      userApi.listTransferRecipients({ limit: 100 }),
+    ]);
 
-      const recipientsData = await userApi.listTransferRecipients({ limit: 100 });
-      setIdentities(recipientsData.users || []);
-    } catch (err) {
-      console.error("Failed to load data", err);
-      showError("Failed to load assets or identities. Please check backend.");
+    if (assetsResult.status === 'fulfilled') {
+      const data = assetsResult.value;
+      setAssets(Array.isArray(data) ? data : data?.assets || []);
+    } else {
+      setAssets([]);
+    }
+
+    if (recipientsResult.status === 'fulfilled') {
+      const data = recipientsResult.value;
+      setIdentities(data?.users || (Array.isArray(data) ? data : []));
+    } else {
+      setIdentities([]);
+    }
+
+    if (assetsResult.status === 'rejected' || recipientsResult.status === 'rejected') {
+      setLoadProblem('Some transfer options are temporarily unavailable. Please refresh in a moment or contact your administrator.');
     }
   };
 
@@ -88,7 +102,8 @@ export default function RequestTransferForm() {
   const selectedRecipient = identities.find((u) => u.id === formData.toUserId);
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
+    <div className="user-console min-h-full p-6 sm:p-8 max-w-none space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className="h-px w-12 bg-gradient-to-r from-emerald-500/40 to-transparent" />
@@ -108,6 +123,13 @@ export default function RequestTransferForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+
+            {loadProblem && (
+              <div className="flex items-start gap-3 rounded-xl border border-[#A9CDEB] bg-[#E8F4FF]/80 px-4 py-3 text-[#38536E]">
+                <span className="material-symbols-outlined text-[#1E5FA8]">info</span>
+                <p className="text-xs leading-5">{loadProblem}</p>
+              </div>
+            )}
 
             {/* Asset Selection */}
             <div>
@@ -284,7 +306,8 @@ export default function RequestTransferForm() {
               <button
                 type="submit"
                 disabled={submitting || !formData.assetId || !formData.toUserId}
-                className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest rounded transition-colors flex items-center justify-center gap-2"
+                title={!formData.assetId || !formData.toUserId ? 'Select an asset and recipient to submit this request' : 'Submit transfer request'}
+                className="flex-1 px-4 py-3 rounded-xl bg-[#1E5FA8] hover:bg-[#164a85] disabled:bg-[#D9E8F7] disabled:text-[#58718B] disabled:border disabled:border-[#B9DCEF] disabled:cursor-not-allowed disabled:opacity-100 text-white font-black uppercase tracking-widest shadow-[0_7px_16px_rgba(30,95,168,0.20)] disabled:shadow-none transition-all flex items-center justify-center gap-2"
               >
                 {submitting && (
                   <span className="material-symbols-outlined text-[18px] animate-spin">hourglass_top</span>
@@ -316,6 +339,7 @@ export default function RequestTransferForm() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -115,7 +115,7 @@ export default function AdminDashboard() {
   const statCards = buildStats(stats, statsLoading);
 
   return (
-    <>
+    <div className="role-console min-h-full p-6 sm:p-8">
       {/* ── Page header ─────────────────────────────────── */}
       <div className="mb-7">
         {/* Classification tape */}
@@ -211,6 +211,6 @@ export default function AdminDashboard() {
         }}
       />
       <MintAssetModal open={mintOpen} onClose={() => setMintOpen(false)} />
-    </>
+    </div>
   );
 }
