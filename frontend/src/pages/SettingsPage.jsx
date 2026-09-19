@@ -1,6 +1,22 @@
-import { useTheme } from '../context/ThemeContext';
-
 export default function SettingsPage() {
-  const { theme, toggleTheme } = useTheme(); const dark = theme === 'dark'; const muted = dark ? 'text-[#A9BFDE]' : 'text-[#58718B]';
-  return <section className={`min-h-full px-5 py-8 sm:px-8 lg:px-12 ${dark ? 'bg-[#060D1A] text-white' : 'bg-[radial-gradient(circle_at_90%_0%,#dbeeff_0%,transparent_30rem),#F4F8FC] text-[#0D2B4E]'}`}><div className="mx-auto max-w-4xl"><header className="mb-7"><p className="text-xs font-bold tracking-[.18em] text-[#1E8A9B] uppercase">Officer Console</p><h1 className="mt-2 text-3xl font-black">Settings</h1><p className={`mt-2 text-sm ${muted}`}>Personal display preferences are stored only in this browser.</p></header><div className={`rounded-2xl border p-6 shadow-[0_14px_35px_rgba(13,43,78,.13)] backdrop-blur-xl ${dark ? 'border-[#28415E] bg-[#0D1F38]/90' : 'border-[#B9DCEF] bg-white/65'}`}><div className="flex items-start gap-4"><span className="material-symbols-outlined rounded-xl bg-[#1E5FA8]/15 p-3 text-[#1E5FA8]">palette</span><div><h2 className="text-base font-bold">Dashboard appearance</h2><p className={`mt-1 text-sm ${muted}`}>Switch between the bright ledger workspace and the focused night console.</p></div></div><button onClick={toggleTheme} className={`mt-6 flex w-full items-center justify-between rounded-xl border p-4 text-left transition ${dark ? 'border-[#38608A] bg-[#102946] hover:bg-[#163756]' : 'border-[#B9DCEF] bg-[#E8F4FF] hover:bg-white'}`}><span className="flex items-center gap-3"><span className={`flex h-9 w-9 items-center justify-center rounded-full ${dark ? 'bg-[#D4AF37] text-[#0D2B4E]' : 'bg-[#1E5FA8] text-white'}`}><span className="material-symbols-outlined">{dark ? 'dark_mode' : 'light_mode'}</span></span><span><span className="block text-sm font-bold">{dark ? 'Night console' : 'Day console'}</span><span className={`mt-.5 block text-xs ${muted}`}>Click to change appearance</span></span></span><span className="material-symbols-outlined text-[#1E5FA8]">swap_horiz</span></button></div></div></section>;
+  return (
+    <section className="min-h-full bg-[radial-gradient(circle_at_90%_0%,#dbeeff_0%,transparent_30rem),#F4F8FC] px-5 py-8 text-[#0D2B4E] sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-4xl">
+        <header className="mb-7">
+          <p className="text-xs font-bold tracking-[.18em] text-[#1E8A9B] uppercase">Officer Console</p>
+          <h1 className="mt-2 text-3xl font-black">Settings</h1>
+          <p className="mt-2 text-sm text-[#58718B]">BELTAL uses a consistent light workspace throughout the application.</p>
+        </header>
+        <div className="rounded-2xl border border-[#B9DCEF] bg-white/65 p-6 shadow-[0_14px_35px_rgba(13,43,78,.13)] backdrop-blur-xl">
+          <div className="flex items-start gap-4">
+            <span className="material-symbols-outlined rounded-xl bg-[#1E5FA8]/15 p-3 text-[#1E5FA8]">light_mode</span>
+            <div>
+              <h2 className="text-base font-bold">Light workspace</h2>
+              <p className="mt-1 text-sm text-[#58718B]">A single light theme keeps navigation, forms, and authentication easy to read.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

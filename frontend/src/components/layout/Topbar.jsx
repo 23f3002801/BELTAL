@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 
 export default function Topbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = false;
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // ─── Theme-aware classes ───
@@ -46,33 +44,6 @@ export default function Topbar() {
             Block #4,928,192
           </span>
         </div>
-
-        {/* Theme Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          className={`
-            relative w-[72px] h-9 rounded-full transition-all duration-300 border shadow-sm
-            ${isDark
-              ? 'bg-[#0D1F38] border-[#315071] hover:border-[#D4AF37]/50'
-              : 'bg-white/65 border-[#A9CDEB] hover:border-[#1E5FA8]/50'
-            }
-          `}
-          aria-label="Toggle theme"
-        >
-          <span
-            className={`
-              absolute top-1 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 shadow-md
-              ${isDark
-                ? 'left-10 bg-[#D4AF37] text-[#0D2B4E]'
-                : 'left-1 bg-[#1E5FA8] text-white'
-              }
-            `}
-          >
-            <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              {isDark ? 'dark_mode' : 'light_mode'}
-            </span>
-          </span>
-        </button>
 
         {/* User Profile */}
         <div className="relative">

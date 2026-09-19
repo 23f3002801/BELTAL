@@ -1,191 +1,157 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { assetApi } from '../../services/api';
 import { useTransaction } from '../../context/TransactionContext';
-import { useFormValidation } from '../../hooks/useFormValidation';
-import { assetApi, adminApi } from '../../services/api';
-import Card, { CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 
-export default function MintAsset() {
-    const { user } = useAuth();
-    const { showPending, showSuccess, showError, removeToast } = useTransaction();
-    const { errors, touched, validateForm, handleBlur, clearErrors } = useFormValidation();
-    const navigate = useNavigate();
-    const [submitting, setSubmitting] = useState(false);
+export default function MintAssetModal({ onClose, open = true }) {
+  const { showPending, showSuccess, showError, removeToast } = useTransaction();
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    assetType: '',
+    classificationTier: 1,
+    sbu: '',
+    custodianWallet: '',
+    assetTag: '',
+    description: '',
+  });
 
-    const [formData, setFormData] = useState({
-        name: '',
-        assetType: '',
-        classificationTier: 1,
-        sbu: user?.sbu || '',
-        recipientId: '',
-        metadata: '',
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const pendingId = showPending('Minting asset on blockchain...');
+    try {
+      await assetApi.mint({
+        ...formData,
+        classificationTier: Number(formData.classificationTier),
+        metadata: formData.description ? { description: formData.description, tag: formData.assetTag } : {},
+      });
+      removeToast(pendingId);
+      showSuccess('Asset minted successfully!');
+      onClose();
+    } catch (err) {
+      removeToast(pendingId);
+      showError(`Failed to mint asset: ${err.uiMessage || err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    const validationRules = {
-        name: { required: true, minLength: 3, label: 'Asset Name' },
-        assetType: { required: true, label: 'Asset Type' },
-        classificationTier: { required: true, number: true, label: 'Classification Tier' },
-        recipientId: { required: true, label: 'Recipient' },
-    };
+  if (!open) return null;
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        const isValid = validateForm(formData, validationRules);
-        if (!isValid) {
-            showError('Please fix the form errors');
-            return;
-        }
-
-        setSubmitting(true);
-        const pendingId = showPending('Minting asset on blockchain...');
-
-        try {
-            await assetApi.mint({
-                ...formData,
-                classificationTier: Number(formData.classificationTier),
-                metadata: formData.metadata ? JSON.parse(formData.metadata) : {},
-            });
-
-            removeToast(pendingId);
-            showSuccess('Asset minted successfully!');
-            navigate('/admin/assets');
-        } catch (err) {
-            removeToast(pendingId);
-            showError(`Failed to mint asset: ${err.uiMessage || err.message}`);
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    return (
-        <div className="role-console min-h-full p-6 sm:p-8 max-w-none space-y-6">
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div>
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="h-px w-12 bg-gradient-to-r from-blue-500/40 to-transparent" />
-                    <span className="text-[9px] font-black tracking-[0.22em] text-blue-500/60 uppercase">
-                        SYSTEM ADMINISTRATOR — MINT ASSET
-                    </span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-black text-white tracking-wide">Mint New Asset</h1>
-                <p className="text-sm text-slate-400 mt-1">
-                    Create a new sovereign asset on the blockchain
-                </p>
-            </div>
-
-            <Card goldAccent={false}>
-                <CardHeader>
-                    <CardTitle>Asset Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Name */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                Asset Name *
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, name: e.target.value });
-                                    clearErrors('name');
-                                }}
-                                onBlur={() => handleBlur('name')}
-                                className="w-full bg-[#0D1F38] border border-[#1F293D] rounded px-3 py-2.5 text-sm text-white focus:border-blue-500 outline-none"
-                                placeholder="Enter asset name"
-                            />
-                            {touched.name && errors.name && (
-                                <p className="text-red-400 text-xs mt-1.5">{errors.name.join(', ')}</p>
-                            )}
-                        </div>
-
-                        {/* Asset Type */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                Asset Type *
-                            </label>
-                            <select
-                                value={formData.assetType}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, assetType: e.target.value });
-                                    clearErrors('assetType');
-                                }}
-                                onBlur={() => handleBlur('assetType')}
-                                className="w-full bg-[#0D1F38] border border-[#1F293D] rounded px-3 py-2.5 text-sm text-white focus:border-blue-500 outline-none"
-                            >
-                                <option value="">Select type</option>
-                                <option value="WEAPON">Weapon System</option>
-                                <option value="ELECTRONIC">Electronic Equipment</option>
-                                <option value="COMMUNICATION">Communication Device</option>
-                                <option value="VEHICLE">Vehicle</option>
-                                <option value="OTHER">Other</option>
-                            </select>
-                            {touched.assetType && errors.assetType && (
-                                <p className="text-red-400 text-xs mt-1.5">{errors.assetType.join(', ')}</p>
-                            )}
-                        </div>
-
-                        {/* Classification Tier */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                Classification Tier *
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="5"
-                                value={formData.classificationTier}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, classificationTier: e.target.value });
-                                    clearErrors('classificationTier');
-                                }}
-                                onBlur={() => handleBlur('classificationTier')}
-                                className="w-full bg-[#0D1F38] border border-[#1F293D] rounded px-3 py-2.5 text-sm text-white focus:border-blue-500 outline-none"
-                            />
-                            {touched.classificationTier && errors.classificationTier && (
-                                <p className="text-red-400 text-xs mt-1.5">{errors.classificationTier.join(', ')}</p>
-                            )}
-                        </div>
-
-                        {/* Metadata (Optional JSON) */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                Metadata (JSON)
-                            </label>
-                            <textarea
-                                value={formData.metadata}
-                                onChange={(e) => setFormData({ ...formData, metadata: e.target.value })}
-                                rows={4}
-                                className="w-full bg-[#0D1F38] border border-[#1F293D] rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none resize-none font-mono"
-                                placeholder='{"serialNumber": "SN123", "manufacturer": "BEL"}'
-                            />
-                            <p className="text-xs text-slate-500 mt-1">Optional JSON metadata</p>
-                        </div>
-
-                        {/* Submit Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/admin/assets')}
-                                className="flex-1 px-4 py-3 border border-[#1F293D] text-slate-400 hover:text-white hover:bg-white/5 rounded font-bold text-sm transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest rounded transition-colors"
-                            >
-                                {submitting ? 'Minting...' : 'Mint Asset'}
-                            </button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-[#1E5FA8] text-xl">token</span>
+            <h2 className="text-base font-black text-[#0A1F3D]">Mint Defence Asset</h2>
           </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
-    );
+
+        {/* Scrollable Form */}
+        <form onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto flex-1">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Asset Name</label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g. Sentinel Radar Unit"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:border-[#1E5FA8] outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Classification Tier</label>
+              <select
+                value={formData.classificationTier}
+                onChange={(e) => setFormData({ ...formData, classificationTier: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:border-[#1E5FA8] outline-none"
+              >
+                <option value={1}>Tier 1</option>
+                <option value={2}>Tier 2</option>
+                <option value={3}>Tier 3</option>
+                <option value={4}>Tier 4</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">SBU</label>
+              <select
+                value={formData.sbu}
+                onChange={(e) => setFormData({ ...formData, sbu: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:border-[#1E5FA8] outline-none"
+              >
+                <option value="">Select SBU</option>
+                <option value="SBU_RADAR">Radar</option>
+                <option value="SBU_EW">Electronic Warfare</option>
+                <option value="SBU_MILCOMM">Military Comm</option>
+                <option value="SBU_CYBER">Cyber Security</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Custodian Wallet Address</label>
+            <input
+              type="text"
+              required
+              value={formData.custodianWallet}
+              onChange={(e) => setFormData({ ...formData, custodianWallet: e.target.value })}
+              placeholder="0x..."
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:border-[#1E5FA8] outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Asset Tag</label>
+            <input
+              type="text"
+              value={formData.assetTag}
+              onChange={(e) => setFormData({ ...formData, assetTag: e.target.value })}
+              placeholder="Optional inventory / asset tag"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:border-[#1E5FA8] outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Non-sensitive asset metadata"
+              rows={2}
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:border-[#1E5FA8] outline-none resize-none"
+            />
+          </div>
+
+          {/* Modal Actions */}
+          <div className="flex gap-2.5 pt-2 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg font-bold text-xs transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-3 py-2 bg-[#1E5FA8] hover:bg-[#164a85] disabled:bg-slate-300 text-white font-bold rounded-lg text-xs transition-all"
+            >
+              {submitting ? 'Minting...' : 'Mint Asset'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }

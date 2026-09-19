@@ -1161,3 +1161,95 @@ body {
   .manager-welcome { grid-template-columns: 1fr; padding: 1.5rem; gap: 1.25rem; }
   .manager-welcome-copy { font-size: .94rem; }
 }
+
+/* Authentication is part of the public light experience. Keep this surface
+   independent of legacy console palette utilities and user preferences. */
+.auth-modal-light {
+  background: linear-gradient(145deg, #ffffff 0%, #f4f9fe 100%) !important;
+  border: 1px solid #a9cfe9 !important;
+  box-shadow: 0 24px 60px rgba(13, 43, 78, .28) !important;
+  color: #123653;
+  max-width: min(56rem, calc(100vw - 2rem)) !important;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+.auth-modal-light .bg-\[\#060D1A\],
+.auth-modal-light .bg-\[\#0A1628\],
+.auth-modal-light .bg-\[\#0B1E36\],
+.auth-modal-light .bg-\[\#0D1F38\]\/60 { background: #edf6ff !important; }
+.auth-modal-light .border-\[\#1E2E48\],
+.auth-modal-light .border-\[\#1E3E62\],
+.auth-modal-light .border-\[\#1E2E48\]\/60,
+.auth-modal-light .border-\[\#1E3E62\]\/60 { border-color: #b7d8ed !important; }
+.auth-modal-light .text-slate-100,
+.auth-modal-light .text-slate-200 { color: #0d2b4e !important; }
+.auth-modal-light .text-slate-400 { color: #466983 !important; }
+.auth-modal-light .text-slate-500 { color: #385d7a !important; }
+.auth-modal-light .text-slate-600,
+.auth-modal-light .text-slate-700 { color: #58718b !important; }
+.auth-modal-light .bg-amber-950\/30 { background: #fff7df !important; }
+.auth-modal-light .border-amber-800\/40 { border-color: #e0b55a !important; }
+.auth-modal-light .text-amber-300,
+.auth-modal-light .text-amber-400 { color: #875d04 !important; }
+.auth-modal-light .bg-red-950\/30 { background: #fff1f2 !important; }
+.auth-modal-light .border-red-800\/40 { border-color: #f0a4ad !important; }
+.auth-modal-light .text-red-300,
+.auth-modal-light .text-red-400 { color: #b4233a !important; }
+.auth-modal-light .bg-emerald-900\/30 { background: #e9faf2 !important; }
+.auth-modal-light .border-emerald-600\/40,
+.auth-modal-light .border-emerald-800\/40 { border-color: #83cfaa !important; }
+.auth-modal-light .text-emerald-400 { color: #047857 !important; }
+
+/* A grid gives every stage a fixed, equal label area. It prevents the long
+   labels from competing with the connector lines at every viewport width. */
+.auth-step-indicator {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .4rem;
+  width: 100%;
+  margin: 0 0 1.1rem;
+}
+.auth-idle-content {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  column-gap: 1.25rem;
+  row-gap: .7rem;
+}
+.auth-idle-content .auth-step-indicator,
+.auth-idle-content > button,
+.auth-idle-content > p { grid-column: 1 / -1; }
+.auth-idle-content fieldset,
+.auth-idle-content > .bg-\[\#060D1A\] { margin: 0 !important; }
+.auth-idle-content > button { margin-top: .25rem; }
+.auth-idle-content > p { margin-top: -.45rem; }
+.auth-step { display: grid; min-width: 0; justify-items: center; text-align: center; }
+.auth-step > .flex-1 { display: none; }
+.auth-step__label {
+  display: block;
+  min-width: 0;
+  margin-top: .3rem;
+  color: #58718b !important;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .035em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.auth-step:has(.bg-\[\#1E5FA8\]) .auth-step__label { color: #175887 !important; }
+.auth-step:has(.border-\[\#C59B27\]) .auth-step__label { color: #875d04 !important; }
+.auth-modal-light .auth-step .bg-\[\#0A1628\] { background: #eef5fb !important; }
+.auth-modal-light .auth-step .border-\[\#1E2E48\] { border-color: #b7d8ed !important; }
+.auth-modal-light .auth-step .text-\[\#7ab0fe\] { color: #175887 !important; }
+.auth-modal-light .auth-step .text-\[\#C59B27\] { color: #875d04 !important; }
+@media (max-width: 420px) {
+  .auth-step-indicator { gap: .2rem; }
+  .auth-step__label { font-size: 9px; letter-spacing: 0; }
+}
+@media (max-width: 700px) {
+  .auth-modal-light { max-width: min(32rem, calc(100vw - 2rem)) !important; }
+  .auth-idle-content { display: block; }
+  .auth-idle-content fieldset,
+  .auth-idle-content > .bg-\[\#060D1A\],
+  .auth-idle-content > button { margin-bottom: 1.25rem !important; }
+  .auth-idle-content > p { margin-top: 0; }
+}

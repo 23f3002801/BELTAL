@@ -84,7 +84,7 @@ function HexWatermark() {
 /* Crypto spinner ring */
 function CryptoSpinner() {
   return (
-    <div className="relative w-16 h-16 mx-auto mb-6">
+    <div className="relative w-16 h-16 mx-auto mb-4">
       {/* Outer ring — slow rotate */}
       <div
         className="absolute inset-0 rounded-full border-2 border-[#C59B27]/20"
@@ -113,12 +113,12 @@ function StepIndicator({ connectStep }) {
   const active = stepIndex(connectStep);
   const isDone = connectStep === 'done';
   return (
-    <div className="flex items-center gap-0 w-full mb-8">
+    <div className="auth-step-indicator" aria-label="Authentication progress">
       {STEPS.map((step, i) => {
         const past = isDone || i < active;
         const current = !isDone && i === active;
         return (
-          <div key={step.key} className="flex items-center flex-1 min-w-0">
+          <div key={step.key} className="auth-step">
             {/* Node */}
             <div className="flex flex-col items-center flex-shrink-0">
               <div
@@ -149,7 +149,7 @@ function StepIndicator({ connectStep }) {
               </div>
               <span
                 className={[
-                  'text-[9px] mt-1 font-bold tracking-wider uppercase text-center leading-tight',
+                  'auth-step__label text-[9px] mt-1 font-bold tracking-wider uppercase text-center leading-tight',
                   past ? 'text-[#7ab0fe]' : current ? 'text-[#C59B27]' : 'text-slate-600',
                 ].join(' ')}
               >
@@ -230,7 +230,7 @@ export default function LoginModal({ isOpen, onClose }) {
       {/* Backdrop */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 z-[90] bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 z-[90] bg-[#0D2B4E]/35 backdrop-blur-sm"
         onClick={() => {
           if (!isLoading) handleClose();
         }}
@@ -245,7 +245,7 @@ export default function LoginModal({ isOpen, onClose }) {
         className="fixed inset-0 z-[91] flex items-center justify-center p-4"
       >
         <div
-          className="beltal-auth-modal relative w-full max-w-md bg-[#040B17] border border-[#1E2E48] rounded-2xl shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_30px_rgba(30,95,168,0.1)] overflow-hidden"
+          className="beltal-auth-modal auth-modal-light relative w-full max-w-md rounded-2xl overflow-hidden"
           style={{ animation: 'modalIn 280ms cubic-bezier(0.16,1,0.3,1)' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -256,8 +256,8 @@ export default function LoginModal({ isOpen, onClose }) {
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#C59B27] to-transparent" />
 
           {/* Header */}
-          <div className="relative px-8 pt-8 pb-0">
-            <div className="flex items-start justify-between mb-6">
+          <div className="relative px-8 pt-6 pb-0">
+            <div className="flex items-start justify-between mb-4">
               {/* BEL classification strip */}
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] font-black tracking-[0.2em] text-[#C59B27] uppercase">
@@ -281,11 +281,11 @@ export default function LoginModal({ isOpen, onClose }) {
             </div>
 
             {/* Shield icon */}
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-[#0B1E36] border border-[#1E3E62] flex items-center justify-center shadow-[0_0_24px_rgba(30,95,168,0.2)]">
+                <div className="w-14 h-14 rounded-full bg-[#0B1E36] border border-[#1E3E62] flex items-center justify-center shadow-[0_0_24px_rgba(30,95,168,0.2)]">
                   <span
-                    className="material-symbols-outlined text-[32px] text-[#7ab0fe]"
+                    className="material-symbols-outlined text-[28px] text-[#7ab0fe]"
                     style={{ fontVariationSettings: '"FILL" 1' }}
                   >
                     shield
@@ -296,16 +296,16 @@ export default function LoginModal({ isOpen, onClose }) {
               </div>
             </div>
 
-            <h2 className="text-center text-[18px] font-black text-slate-100 tracking-wide mb-1">
+            <h2 className="text-center text-[20px] font-black text-slate-100 tracking-wide mb-1">
               Sovereign Wallet Authentication
             </h2>
-            <p className="text-center text-[11px] text-slate-500 mb-6 tracking-wide">
+            <p className="text-center text-[12px] text-slate-500 mb-4 tracking-wide">
               Sign In with Ethereum — ECDSA cryptographic verification
             </p>
           </div>
 
           {/* Body */}
-          <div className="relative px-8 pb-8">
+          <div className="relative px-8 pb-6">
             {/* ── No MetaMask state ── */}
             {!hasMetaMask && (
               <div className="text-center">
@@ -316,10 +316,10 @@ export default function LoginModal({ isOpen, onClose }) {
                   >
                     warning
                   </span>
-                  <p className="text-[13px] font-bold text-amber-300 mb-1">
+                  <p className="text-[14px] font-bold text-amber-300 mb-1">
                     Web3 Wallet Not Detected
                   </p>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[12px] text-slate-400">
                     A MetaMask-compatible browser extension is required for sovereign authentication.
                   </p>
                 </div>
@@ -327,7 +327,7 @@ export default function LoginModal({ isOpen, onClose }) {
                   href="https://metamask.io/download/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1E5FA8] hover:bg-[#1a52931] text-white text-[13px] font-bold rounded-xl transition-all border border-[#2a72c0]"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1E5FA8] hover:bg-[#1a52931] text-white text-[14px] font-bold rounded-xl transition-all border border-[#2a72c0]"
                 >
                   <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                   Install MetaMask
@@ -337,33 +337,33 @@ export default function LoginModal({ isOpen, onClose }) {
 
             {/* ── Idle state ── */}
             {hasMetaMask && connectStep === 'idle' && (
-              <div>
+              <div className="auth-idle-content">
                 {/* Step indicators — all unlit */}
                 <StepIndicator connectStep="idle" />
 
                 <fieldset className="mb-5">
-                  <legend className="mb-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Open preferred portal</legend>
+                  <legend className="mb-2 text-[11px] font-bold tracking-widest text-slate-500 uppercase">Open preferred portal</legend>
                   <div className="grid grid-cols-2 gap-2">
                     {['USER', 'MANAGER', 'AUDITOR', 'ADMIN'].map((role) => (
                       <button
                         key={role}
                         type="button"
                         onClick={() => setPortalPreference(role)}
-                        className={`rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-colors ${portalPreference === role ? 'border-[#1E5FA8] bg-[#1E5FA8]/20 text-[#7ab0fe]' : 'border-[#1E2E48] bg-[#060D1A] text-slate-400 hover:border-slate-500'}`}
+                        className={`rounded-lg border px-3 py-2 text-left text-[12px] font-bold transition-colors ${portalPreference === role ? 'border-[#1E5FA8] bg-[#1E5FA8]/20 text-[#7ab0fe]' : 'border-[#1E2E48] bg-[#060D1A] text-slate-400 hover:border-slate-500'}`}
                       >
                         {role}
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-[10px] leading-relaxed text-slate-500">This is only a portal preference. Your role assigned in the database is verified by the server and controls access.</p>
+                  <p className="mt-2 text-[11px] leading-relaxed text-slate-500">This is only a portal preference. Your role assigned in the database is verified by the server and controls access.</p>
                 </fieldset>
 
                 {/* Info card */}
                 <div className="bg-[#060D1A] border border-[#1E2E48] rounded-xl p-4 mb-5">
-                  <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+                  <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
                     Authentication Procedure
                   </p>
-                  <ol className="space-y-1.5 text-[11px] text-slate-400">
+                  <ol className="space-y-1.5 text-[12px] text-slate-400">
                     {['Connect your sovereign hardware / software wallet', 'Review & sign the BELTAL challenge nonce', 'ECDSA signature verified on-chain — JWT issued'].map((step, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span className="text-[#C59B27] font-black shrink-0">{i + 1}.</span>
@@ -376,7 +376,7 @@ export default function LoginModal({ isOpen, onClose }) {
                 <button
                   id="beltal-connect-wallet-btn"
                   onClick={handleConnect}
-                  className="w-full flex items-center justify-center gap-3 py-3.5 px-6 bg-[#1E5FA8] hover:bg-[#1a5299] active:bg-[#163f7a] text-white font-black text-[14px] tracking-wide rounded-xl border border-[#2a72c0] shadow-[0_0_20px_rgba(30,95,168,0.3)] transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-3 py-3 px-6 bg-[#1E5FA8] hover:bg-[#1a5299] active:bg-[#163f7a] text-white font-black text-[15px] tracking-wide rounded-xl border border-[#2a72c0] shadow-[0_0_20px_rgba(30,95,168,0.3)] transition-all duration-200"
                 >
                   <span
                     className="material-symbols-outlined text-[20px]"
@@ -387,7 +387,7 @@ export default function LoginModal({ isOpen, onClose }) {
                   Connect Sovereign Wallet
                 </button>
 
-                <p className="text-center text-[10px] text-slate-600 mt-3">
+                <p className="text-center text-[11px] text-slate-600 mt-2">
                   Your private key never leaves your device
                 </p>
               </div>
@@ -398,15 +398,15 @@ export default function LoginModal({ isOpen, onClose }) {
               <div className="text-center">
                 <StepIndicator connectStep={connectStep} />
                 <CryptoSpinner />
-                <p className="text-[14px] font-bold text-slate-200 mb-1">
+                <p className="text-[15px] font-bold text-slate-200 mb-1">
                   {connectStep === 'signing' ? 'Awaiting Signature' : 'Processing…'}
                 </p>
-                <p className="text-[11px] text-slate-500 tracking-wide">
+                <p className="text-[12px] text-slate-500 tracking-wide">
                   {stepLabel(connectStep)}
                 </p>
                 {connectStep === 'signing' && (
                   <div className="mt-4 bg-[#0D1F38]/60 border border-[#1E3E62]/60 rounded-lg px-4 py-2.5">
-                    <p className="text-[10px] text-[#7ab0fe] font-bold tracking-wider">
+                    <p className="text-[11px] text-[#7ab0fe] font-bold tracking-wider">
                       ✦ Check your wallet extension — approve the signature request
                     </p>
                   </div>
@@ -429,12 +429,12 @@ export default function LoginModal({ isOpen, onClose }) {
                     verified
                   </span>
                 </div>
-                <p className="text-[15px] font-black text-emerald-400 mb-1">Identity Verified</p>
-                <p className="text-[11px] text-slate-500 mb-3">ECDSA signature accepted — JWT issued</p>
+                <p className="text-[16px] font-black text-emerald-400 mb-1">Identity Verified</p>
+                <p className="text-[12px] text-slate-500 mb-3">ECDSA signature accepted — JWT issued</p>
                 {user?.walletAddress && (
                   <div className="inline-flex items-center gap-2 bg-[#060D1A] border border-[#1E2E48] px-3 py-1.5 rounded-lg">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                    <code className="text-[11px] text-[#7ab0fe] font-bold">
+                    <code className="text-[12px] text-[#7ab0fe] font-bold">
                       {shortenAddress(user.walletAddress)}
                     </code>
                     <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-900/30 border border-emerald-800/40 px-1.5 py-0.5 rounded">
@@ -455,8 +455,8 @@ export default function LoginModal({ isOpen, onClose }) {
                   >
                     gpp_bad
                   </span>
-                  <p className="text-[13px] font-black text-red-300 mb-1.5">Authentication Failed</p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                  <p className="text-[14px] font-black text-red-300 mb-1.5">Authentication Failed</p>
+                  <p className="text-[12px] text-slate-400 leading-relaxed">
                     {connectError || 'An unexpected error occurred during wallet verification.'}
                   </p>
                 </div>
@@ -464,7 +464,7 @@ export default function LoginModal({ isOpen, onClose }) {
                 <button
                   id="beltal-retry-connect-btn"
                   onClick={handleConnect}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[#1E5FA8] hover:bg-[#1a5299] text-white font-bold text-[13px] rounded-xl border border-[#2a72c0] transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[#1E5FA8] hover:bg-[#1a5299] text-white font-bold text-[14px] rounded-xl border border-[#2a72c0] transition-all"
                 >
                   <span className="material-symbols-outlined text-[16px]">refresh</span>
                   Retry Authentication
@@ -474,11 +474,11 @@ export default function LoginModal({ isOpen, onClose }) {
           </div>
 
           {/* Bottom classification strip */}
-          <div className="relative px-8 pb-4 flex items-center justify-between border-t border-[#1E2E48]/60">
-            <span className="text-[8px] font-bold tracking-[0.18em] text-slate-700 uppercase pt-3">
+          <div className="relative px-8 pb-3 flex items-center justify-between border-t border-[#1E2E48]/60">
+            <span className="text-[9px] font-bold tracking-[0.18em] text-slate-700 uppercase pt-2">
               BELTAL — Sovereign Defence Ledger
             </span>
-            <span className="text-[8px] font-bold tracking-widest text-[#C59B27]/40 uppercase pt-3">
+            <span className="text-[9px] font-bold tracking-widest text-[#C59B27]/40 uppercase pt-2">
               RESTRICTED
             </span>
           </div>
